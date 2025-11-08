@@ -1,0 +1,425 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Étapes de la commande -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between max-w-2xl mx-auto">
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full bg-gold-500 text-gray-900 flex items-center justify-center font-bold mb-1">1</div>
+                    <span class="text-sm font-medium">Panier</span>
+                </div>
+                <div class="h-1 flex-1 bg-gray-700 mx-2"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full bg-gold-500 text-gray-900 flex items-center justify-center font-bold mb-1">2</div>
+                    <span class="text-sm font-medium">Livraison</span>
+                </div>
+                <div class="h-1 flex-1 bg-gray-700 mx-2"></div>
+                <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full bg-gray-700 border border-gray-600 text-gray-400 flex items-center justify-center font-bold mb-1">3</div>
+                    <span class="text-sm text-gray-400">Paiement</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-900 rounded-lg shadow-xl overflow-hidden">
+            <div class="md:flex">
+                <!-- Détails de la commande -->
+                <div class="md:w-1/2 p-6 border-b md:border-b-0 md:border-r border-gray-700">
+                    <h2 class="text-xl font-semibold mb-6">Récapitulatif de la commande</h2>
+                    
+                    <div class="mb-6 p-4 bg-gray-800 rounded-lg">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-20 h-20 flex-shrink-0">
+                                {% if product.images.first %}
+                                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover rounded">
+                                {% else %}
+                                    <div class="w-full h-full bg-gray-700 rounded flex items-center justify-center">
+                                        <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="font-semibold text-lg">{{ product.name }}</h3>
+                                <div class="text-sm text-gray-400 mt-1">
+                                    <p>Référence: {{ product.sku }}</p>
+                                </div>
+                                <div class="mt-2 text-gold-500 font-semibold">
+                                    {{ product.price|floatformat:2 }} FCFA
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-gray-400">x</span>
+                                <span class="ml-2">{{ form.quantity.value|default:1 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-gray-700 pt-4">
+                        <div class="space-y-2 mb-4">
+                            <div class="flex justify-between">
+                                <span>Sous-total</span>
+                                <span class="font-medium">{{ product.price|floatformat:2 }} FCFA</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Livraison</span>
+                                <span class="text-green-500">Gratuite</span>
+                            </div>
+                        </div>
+                        <div class="border-t border-gray-700 pt-3 flex justify-between text-lg font-semibold">
+                            <span>Total TTC</span>
+                            <span class="text-gold-500">{{ product.price|floatformat:2 }} FCFA</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 p-4 bg-gray-800 rounded-lg">
+                        <div class="flex items-start">
+                            <svg class="h-5 w-5 text-green-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <div>
+                                <p class="font-medium">Paiement sécurisé</p>
+                                <p class="text-sm text-gray-400">Vos données sont protégées par un chiffrement SSL 256 bits</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Formulaire de commande simplifié -->
+<div class="md:w-1/2 p-6">
+    <h2 class="text-xl font-semibold mb-6">Informations de livraison</h2>
+    
+    <form method="post" class="space-y-6" id="order-form">
+        {% csrf_token %}
+        
+        <!-- Affichage des messages d'erreur généraux -->
+        {% if form.non_field_errors %}
+            <div class="bg-red-900/30 border border-red-700 text-red-200 px-4 py-3 rounded mb-4">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- Section Informations personnelles (uniquement pour non connectés) -->
+        {% if not user.is_authenticated %}
+        <div class="bg-gray-800/50 p-6 rounded-lg mb-6">
+            <h3 class="text-lg font-medium text-white mb-4">Informations personnelles</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Prénom -->
+                <div class="md:col-span-1">
+                    <label for="customer_first_name" class="block text-sm font-medium text-gray-300 mb-1">
+                        Prénom <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           id="customer_first_name" 
+                           name="customer_first_name" 
+                           required
+                           class="w-full px-4 py-2 bg-gray-800 border {% if form.errors.customer_first_name %}border-red-500{% else %}border-gray-700{% endif %} rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                           value="{{ request.POST.customer_first_name|default:'' }}"
+                           maxlength="100"
+                           placeholder="Votre prénom">
+                    {% if form.errors.customer_first_name %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.errors.customer_first_name.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Nom -->
+                <div class="md:col-span-1">
+                    <label for="customer_last_name" class="block text-sm font-medium text-gray-300 mb-1">
+                        Nom <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" 
+                           id="customer_last_name" 
+                           name="customer_last_name" 
+                           required
+                           class="w-full px-4 py-2 bg-gray-800 border {% if form.errors.customer_last_name %}border-red-500{% else %}border-gray-700{% endif %} rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                           value="{{ request.POST.customer_last_name|default:'' }}"
+                           maxlength="100"
+                           placeholder="Votre nom">
+                    {% if form.errors.customer_last_name %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.errors.customer_last_name.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Email -->
+                <div class="col-span-2">
+                    <label for="customer_email" class="block text-sm font-medium text-gray-300 mb-1">
+                        Email <span class="text-red-500">*</span>
+                    </label>
+                    <input type="email" 
+                           id="customer_email" 
+                           name="customer_email" 
+                           required
+                           class="w-full px-4 py-2 bg-gray-800 border {% if form.errors.customer_email %}border-red-500{% else %}border-gray-700{% endif %} rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                           value="{{ request.POST.customer_email|default:'' }}"
+                           placeholder="votre@email.com">
+                    {% if form.errors.customer_email %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.errors.customer_email.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Téléphone -->
+                <div class="col-span-2">
+                    <label for="customer_phone" class="block text-sm font-medium text-gray-300 mb-1">
+                        Téléphone <span class="text-red-500">*</span>
+                    </label>
+                    <input type="tel" 
+                           id="customer_phone" 
+                           name="customer_phone" 
+                           required
+                           class="w-full px-4 py-2 bg-gray-800 border {% if form.errors.customer_phone %}border-red-500{% else %}border-gray-700{% endif %} rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                           value="{{ request.POST.customer_phone|default:'' }}"
+                           maxlength="20"
+                           placeholder="Votre numéro de téléphone">
+                    {% if form.errors.customer_phone %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.errors.customer_phone.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Section Quantité -->
+        <div class="bg-gray-800/50 p-6 rounded-lg">
+            <h3 class="text-lg font-medium text-white mb-4">Détails de la commande</h3>
+            <div>
+                <label for="quantity" class="block text-sm font-medium text-gray-300 mb-1">
+                    Quantité <span class="text-red-500">*</span>
+                </label>
+                <input type="number" 
+                       id="quantity" 
+                       name="quantity" 
+                       min="1" 
+                       max="{{ product.in_stock }}"
+                       required
+                       class="w-full px-4 py-2 bg-gray-800 border {% if form.errors.quantity %}border-red-500{% else %}border-gray-700{% endif %} rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                       value="{{ request.POST.quantity|default:'1' }}"
+                       onchange="updateTotalPrice()">
+                {% if form.errors.quantity %}
+                    <p class="text-red-400 text-xs mt-1">{{ form.errors.quantity.0 }}</p>
+                {% endif %}
+                <p class="text-xs text-gray-400 mt-1">{{ product.in_stock }} exemplaire(s) disponible(s)</p>
+            </div>
+        </div>
+        
+        <!-- Section Adresse de livraison -->
+        <div class="bg-gray-800/50 p-6 rounded-lg">
+            <h3 class="text-lg font-medium text-white mb-4">Adresse de livraison</h3>
+            <div class="space-y-4">
+                <!-- Adresse de livraison -->
+                <div>
+                    <label for="shipping_address" class="block text-sm font-medium text-gray-300 mb-1">
+                        Adresse de livraison <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="shipping_address" 
+                              name="shipping_address" 
+                              required
+                              rows="3"
+                              class="w-full px-4 py-2 bg-gray-800 border {% if form.errors.shipping_address %}border-red-500{% else %}border-gray-700{% endif %} rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              placeholder="Adresse complète de livraison">{{ request.POST.shipping_address|default:'' }}</textarea>
+                    {% if form.errors.shipping_address %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.errors.shipping_address.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Adresse de facturation -->
+                <div class="flex items-center mt-4">
+                    <input type="checkbox" 
+                           id="same-address" 
+                           class="rounded border-gray-600 bg-gray-700 text-gold-500 focus:ring-gold-500"
+                           checked
+                           onchange="toggleBillingAddress()">
+                    <label for="same-address" class="ml-2 text-sm text-gray-300">L'adresse de facturation est la même</label>
+                </div>
+                
+                <div id="billing-address" class="hidden">
+                    <label for="billing_address" class="block text-sm font-medium text-gray-300 mb-1">
+                        Adresse de facturation
+                    </label>
+                    <textarea id="billing_address" 
+                              name="billing_address" 
+                              rows="3"
+                              class="w-full px-4 py-2 bg-gray-800 border {% if form.errors.billing_address %}border-red-500{% else %}border-gray-700{% endif %} rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                              placeholder="Adresse de facturation (identique à la livraison si vide)">{{ request.POST.billing_address|default:'' }}</textarea>
+                    {% if form.errors.billing_address %}
+                        <p class="text-red-400 text-xs mt-1">{{ form.errors.billing_address.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section Notes -->
+        <div class="bg-gray-800/50 p-6 rounded-lg">
+            <h3 class="text-lg font-medium text-white mb-4">Informations supplémentaires</h3>
+            <div>
+                <label for="notes" class="block text-sm font-medium text-gray-300 mb-1">
+                    Notes (optionnel)
+                </label>
+                <textarea id="notes" 
+                          name="notes" 
+                          rows="2"
+                          class="w-full px-4 py-2 bg-gray-800 border {% if form.errors.notes %}border-red-500{% else %}border-gray-700{% endif %} rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                          placeholder="Instructions spéciales pour la commande">{{ request.POST.notes|default:'' }}</textarea>
+                {% if form.errors.notes %}
+                    <p class="text-red-400 text-xs mt-1">{{ form.errors.notes.0 }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Bouton de soumission -->
+        <div class="mt-6">
+            <button type="submit" class="w-full bg-gold-500 hover:bg-gold-600 text-black font-semibold py-3 px-6 rounded-lg transition duration-300">
+                Confirmer la commande
+            </button>
+            <p class="text-xs text-gray-400 mt-2 text-center">
+                En passant commande, vous acceptez nos conditions générales de vente.
+            </p>
+        </div>
+    </form>
+</div>
+
+<script>
+// Gestion de l'adresse de facturation
+function toggleBillingAddress() {
+    const sameAddressCheckbox = document.getElementById('same-address');
+    const billingAddressField = document.getElementById('billing-address');
+    const shippingAddress = document.getElementById('shipping_address');
+    const billingAddress = document.getElementById('billing_address');
+    
+    if (sameAddressCheckbox.checked) {
+        billingAddressField.classList.add('hidden');
+        billingAddress.required = false;
+        // Copier l'adresse de livraison
+        if (shippingAddress.value) {
+            billingAddress.value = shippingAddress.value;
+        }
+    } else {
+        billingAddressField.classList.remove('hidden');
+        billingAddress.required = true;
+    }
+}
+
+// Mise à jour du prix total
+function updateTotalPrice() {
+    const quantityInput = document.getElementById('quantity');
+    const totalPriceElement = document.querySelector('.border-t.border-gray-700.pt-3 .text-gold-500');
+    const unitPrice = {{ product.price }};
+    
+    if (quantityInput && totalPriceElement) {
+        const quantity = parseInt(quantityInput.value) || 1;
+        const totalPrice = unitPrice * quantity;
+        totalPriceElement.textContent = totalPrice.toFixed(2) + ' FCFA';
+        
+        // Mettre à jour aussi le sous-total
+        const subtotalElement = document.querySelector('.space-y-2.mb-4 .font-medium');
+        if (subtotalElement) {
+            subtotalElement.textContent = totalPrice.toFixed(2) + ' FCFA';
+        }
+    }
+}
+
+// Copier l'adresse de livraison quand on tape
+document.getElementById('shipping_address').addEventListener('input', function() {
+    const sameAddressCheckbox = document.getElementById('same-address');
+    const billingAddress = document.getElementById('billing_address');
+    
+    if (sameAddressCheckbox.checked) {
+        billingAddress.value = this.value;
+    }
+});
+
+// Initialisation au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    toggleBillingAddress();
+    updateTotalPrice();
+    
+    // Validation des champs obligatoires pour utilisateurs non connectés
+    {% if not user.is_authenticated %}
+    const requiredFields = ['customer_first_name', 'customer_last_name', 'customer_email', 'customer_phone'];
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    this.classList.add('border-red-500');
+                } else {
+                    this.classList.remove('border-red-500');
+                }
+            });
+        }
+    });
+    {% endif %}
+});
+</script>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des messages de notification
+    const messages = document.querySelectorAll('.fixed.top-4.right-4 > div');
+    messages.forEach(message => {
+        setTimeout(() => {
+            message.style.transition = 'opacity 0.5s ease-out';
+            message.style.opacity = '0';
+            setTimeout(() => message.remove(), 500);
+        }, 5000);
+    });
+
+    // Gestion de l'affichage du formulaire de facturation
+    const sameAddressCheckbox = document.getElementById('same-address');
+    const billingAddressDiv = document.getElementById('billing-address');
+    const shippingAddressField = document.getElementById('{{ order_form.shipping_address.id_for_label }}');
+    const billingAddressField = document.getElementById('{{ order_form.billing_address.id_for_label }}');
+    
+    function updateBillingAddress() {
+        if (sameAddressCheckbox.checked) {
+            billingAddressDiv.classList.add('hidden');
+            if (shippingAddressField && billingAddressField) {
+                billingAddressField.value = shippingAddressField.value;
+            }
+        } else {
+            billingAddressDiv.classList.remove('hidden');
+        }
+    }
+    
+    if (sameAddressCheckbox && billingAddressDiv) {
+        // Écouter les changements de la case à cocher
+        sameAddressCheckbox.addEventListener('change', updateBillingAddress);
+        
+        // Écouter les changements dans le champ d'adresse de livraison
+        if (shippingAddressField) {
+            shippingAddressField.addEventListener('input', function() {
+                if (sameAddressCheckbox.checked && billingAddressField) {
+                    billingAddressField.value = this.value;
+                }
+            });
+        }
+        
+        // Initialiser l'état au chargement
+        updateBillingAddress();
+    }
+    
+    // Ajouter des classes aux champs générés par Django
+    document.querySelectorAll('input, textarea, select').forEach(function(element) {
+        if (!element.classList.contains('bg-gray-800') && 
+            !element.classList.contains('form-check-input') &&
+            !element.classList.contains('hidden')) {
+            element.classList.add('w-full', 'px-4', 'py-2', 'bg-gray-800', 'border', 'border-gray-700', 'rounded-lg', 'text-white', 'focus:ring-2', 'focus:ring-gold-500', 'focus:border-transparent');
+        }
+    });
+});
+</script>
+{% endblock extra_js %}

@@ -1,0 +1,482 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Boutique - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- En-tête avec fil d'Ariane et filtres -->
+        <div class="border-b border-gray-200 py-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <h1 class="text-3xl font-bold tracking-tight text-gray-900">
+                    {% if category %}
+                        {{ category.name }}
+                        {% if subcategory %} - {{ subcategory.name }}{% endif %}
+                    {% else %}
+                        Notre collection
+                    {% endif %}
+                </h1>
+                
+                <div class="mt-4 md:mt-0 flex items-center
+                            <div class="relative inline-block text-left">
+                    <div>
+                        <button type="button" 
+                                class="group inline-flex justify-center text-sm font-medium text-gray-700 hover:text-gray-900" 
+                                id="menu-button" 
+                                aria-expanded="false" 
+                                aria-haspopup="true"
+                                onclick="document.getElementById('sort-menu').classList.toggle('hidden')">
+                            Trier
+                            <svg class="-mr-1 ml-1 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-500" 
+                                 viewBox="0 0 20 20" 
+                                 fill="currentColor" 
+                                 aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div id="sort-menu" class="hidden absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none" 
+                         role="menu" 
+                         aria-orientation="vertical" 
+                         aria-labelledby="menu-button" 
+                         tabindex="-1">
+                        <div class="py-1" role="none">
+                            <a href="?sort=price_asc" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="menu-item-0">
+                                Prix croissant
+                            </a>
+                            <a href="?sort=price_desc" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="menu-item-1">
+                                Prix décroissant
+                            </a>
+                            <a href="?sort=newest" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="menu-item-2">
+                                Nouveautés
+                            </a>
+                            <a href="?sort=popular" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="menu-item-3">
+                                Les plus populaires
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtres actifs -->
+            <div class="mt-4">
+                <div class="flex flex-wrap gap-2">
+                    {% if request.GET.sort %}
+                    <span class="inline-flex items-center rounded-full bg-gray-100 py-1.5 pl-3 pr-2 text-sm font-medium text-gray-700">
+                        {% if request.GET.sort == 'price_asc' %}Prix croissant{% endif %}
+                        {% if request.GET.sort == 'price_desc' %}Prix décroissant{% endif %}
+                        {% if request.GET.sort == 'newest' %}Nouveautés{% endif %}
+                        {% if request.GET.sort == 'popular' %}Populaires{% endif %}
+                        <button type="button" class="ml-1.5 inline-flex h-4 w-4 flex-shrink-0 rounded-full p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-500">
+                            <span class="sr-only">Supprimer le filtre</span>
+                            <svg class="h-2 w-2" fill="currentColor" viewBox="0 0 8 8">
+                                <path d="M1.293 1.293a1 1 0 0 1 1.414 0L4 2.586l1.293-1.293a1 1 0 1 1 1.414 1.414L5.414 4l1.293 1.293a1 1 0 0 1-1.414 1.414L4 5.414l-1.293 1.293a1 1 0 0 1-1.414-1.414L2.586 4 1.293 2.707a1 1 0 0 1 0-1.414z"/>
+                            </svg>
+                        </button>
+                    </span>
+                    {% endif %}
+                    
+                    {% if request.GET.q %}
+                    <span class="inline-flex items-center rounded-full bg-gray-100 py-1.5 pl-3 pr-2 text-sm font-medium text-gray-700">
+                        Recherche : {{ request.GET.q }}
+                        <a href="?{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" class="ml-1.5 inline-flex h-4 w-4 flex-shrink-0 rounded-full p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-500">
+                            <span class="sr-only">Supprimer le filtre</span>
+                            <svg class="h-2 w-2" fill="currentColor" viewBox="0 0 8 8">
+                                <path d="M1.293 1.293a1 1 0 0 1 1.414 0L4 2.586l1.293-1.293a1 1 0 1 1 1.414 1.414L5.414 4l1.293 1.293a1 1 0 0 1-1.414 1.414L4 5.414l-1.293 1.293a1 1 0 0 1-1.414-1.414L2.586 4 1.293 2.707a1 1 0 0 1 0-1.414z"/>
+                            </svg>
+                        </a>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenu principal -->
+        <div class="pt-6 pb-12 lg:grid lg:grid-cols-4 lg:gap-x-8">
+            <!-- Filtres -->
+            <aside class="hidden lg:block">
+                <h2 class="sr-only">Filtres</h2>
+                
+                <!-- Recherche -->
+                <div class="border-b border-gray-200 py-6">
+                    <h3 class="-my-3 flow-root">
+                        <button type="button" 
+                                class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500" 
+                                aria-controls="filter-section-search" 
+                                data-expanded="false">
+                            <span class="font-medium text-gray-900">Rechercher</span>
+                            <span class="ml-6 flex items-center">
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                </svg>
+                            </span>
+                        </button>
+                    </h3>
+                    <div class="pt-6" id="filter-section-search">
+                        <div class="space-y-4">
+                            <div class="relative">
+                                <input type="text" 
+                                       name="q" 
+                                       value="{{ request.GET.q }}" 
+                                       placeholder="Rechercher un produit..."
+                                       class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gold-600 sm:text-sm sm:leading-6">
+                                <button type="submit" class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                    <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Catégories -->
+                <div class="border-b border-gray-200 py-6">
+                    <h3 class="-my-3 flow-root">
+                        <button type="button" 
+                                class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500" 
+                                aria-controls="filter-section-categories" 
+                                data-expanded="false">
+                            <span class="font-medium text-gray-900">Catégories</span>
+                            <span class="ml-6 flex items-center">
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                </svg>
+                            </span>
+                        </button>
+                    </h3>
+                    <div class="pt-6" id="filter-section-categories">
+                        <div class="space-y-4">
+                            {% for cat in categories %}
+                            <div class="flex items-center">
+                                <a href="{% url 'product_list_by_category' category_slug=cat.slug %}" 
+                                   class="text-gray-600 hover:text-gray-800 {% if category and category.slug == cat.slug %}font-medium text-gold-600{% endif %}">
+                                    {{ cat.name }}
+                                    <span class="text-xs text-gray-500 ml-1">({{ cat.products.count }})</span>
+                                </a>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prix -->
+                <div class="border-b border-gray-200 py-6">
+                    <h3 class="-my-3 flow-root">
+                        <button type="button" 
+                                class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500" 
+                                aria-controls="filter-section-price" 
+                                data-expanded="false">
+                            <span class="font-medium text-gray-900">Prix</span>
+                            <span class="ml-6 flex items-center">
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                </svg>
+                            </span>
+                        </button>
+                    </h3>
+                    <div class="pt-6" id="filter-section-price">
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}price=0-50000" 
+                                   class="text-gray-600 hover:text-gray-800">
+                                    Moins de 50 000 FCFA
+                                </a>
+                            </div>
+                            <div class="flex items-center">
+                                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}price=50000-100000" 
+                                   class="text-gray-600 hover:text-gray-800">
+                                    50 000 - 100 000 FCFA
+                                </a>
+                            </div>
+                            <div class="flex items-center">
+                                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}price=100000-200000" 
+                                   class="text-gray-600 hover:text-gray-800">
+                                    100 000 - 200 000 FCFA
+                                </a>
+                            </div>
+                            <div class="flex items-center">
+                                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}price=200000-500000" 
+                                   class="text-gray-600 hover:text-gray-800">
+                                    200 000 - 500 000 FCFA
+                                </a>
+                            </div>
+                            <div class="flex items-center">
+                                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}price=500000-" 
+                                   class="text-gray-600 hover:text-gray-800">
+                                    Plus de 500 000 FCFA
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statuts -->
+                <div class="border-b border-gray-200 py-6">
+                    <h3 class="-my-3 flow-root">
+                        <button type="button" 
+                                class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500" 
+                                aria-controls="filter-section-status" 
+                                data-expanded="false">
+                            <span class="font-medium text-gray-900">Statut</span>
+                            <span class="ml-6 flex items-center">
+                                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                                </svg>
+                            </span>
+                        </button>
+                    </h3>
+                    <div class="pt-6" id="filter-section-status">
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}status=new" 
+                                   class="text-gray-600 hover:text-gray-800 flex items-center">
+                                    <span class="mr-2 h-4 w-4 rounded border border-gray-300 {% if request.GET.status == 'new' %}bg-gold-500 border-gold-500{% endif %}">
+                                        {% if request.GET.status == 'new' %}
+                                        <svg class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                                        </svg>
+                                        {% endif %}
+                                    </span>
+                                    Nouveautés
+                                </a>
+                            </div>
+                            <div class="flex items-center">
+                                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}status=bestseller" 
+                                   class="text-gray-600 hover:text-gray-800 flex items-center">
+                                    <span class="mr-2 h-4 w-4 rounded border border-gray-300 {% if request.GET.status == 'bestseller' %}bg-gold-500 border-gold-500{% endif %}">
+                                        {% if request.GET.status == 'bestseller' %}
+                                        <svg class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                                        </svg>
+                                        {% endif %}
+                                    </span>
+                                    Meilleures ventes
+                                </a>
+                            </div>
+                            <div class="flex items-center">
+                                <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}status=featured" 
+                                   class="text-gray-600 hover:text-gray-800 flex items-center">
+                                    <span class="mr-2 h-4 w-4 rounded border border-gray-300 {% if request.GET.status == 'featured' %}bg-gold-500 border-gold-500{% endif %}">
+                                        {% if request.GET.status == 'featured' %}
+                                        <svg class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                                        </svg>
+                                        {% endif %}
+                                    </span>
+                                    En vedette
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Liste des produits -->
+            <div class="mt-6 lg:col-span-3 lg:mt-0">
+                {% if products %}
+                <div class="grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-3 lg:gap-x-8">
+                    {% for product in products %}
+                    <div class="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+                        <!-- Badges -->
+                        <div class="absolute top-2 right-2 z-10 flex flex-col space-y-1">
+                            {% if product.is_new %}
+                            <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                                Nouveau
+                            </span>
+                            {% endif %}
+                            {% if product.is_bestseller %}
+                            <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+                                Best-seller
+                            </span>
+                            {% endif %}
+                            {% if product.is_featured %}
+                            <span class="inline-flex items-center rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-medium text-pink-800">
+                                En vedette
+                            </span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Image du produit -->
+                        <div class="aspect-w-3 aspect-h-4 bg-gray-200 group-hover:opacity-75 sm:aspect-none sm:h-64">
+                            {% with product.images.first as image %}
+                                {% if image %}
+                                    <img src="{{ image.image.url }}" 
+                                         alt="{{ image.alt_text|default:product.name }}" 
+                                         class="h-full w-full object-cover object-center sm:h-full sm:w-full">
+                                {% else %}
+                                    <div class="h-full w-full flex items-center justify-center bg-gray-100">
+                                        <span class="text-gray-400">Aucune image</span>
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        
+                        <!-- Détails du produit -->
+                        <div class="flex flex-1 flex-col space-y-2 p-4">
+                            <h3 class="text-sm font-medium text-gray-900">
+                                <a href="{% url 'product_detail' slug=product.slug %}">
+                                    <span aria-hidden="true" class="absolute inset-0"></span>
+                                    {{ product.name }}
+                                </a>
+                            </h3>
+                            
+                            <!-- Note et avis -->
+                            <div class="flex items-center">
+                                <div class="flex items-center">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= product.average_rating|default:0 %}
+                                            <svg class="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                            </svg>
+                                        {% else %}
+                                            <svg class="h-4 w-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                            </svg>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span class="ml-1 text-xs text-gray-500">
+                                        ({{ product.reviews.count }})
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Prix -->
+                            <div class="flex items-baseline">
+                                <p class="text-lg font-bold text-gray-900">{{ product.price|floatformat:0 }} FCFA</p>
+                                {% if product.old_price %}
+                                <p class="ml-2 text-sm text-gray-500 line-through">{{ product.old_price|floatformat:0 }} FCFA</p>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Boutons d'action -->
+                            <div class="mt-auto flex space-x-2">
+                                <a href="{% url 'order_create' product_id=product.id %}" 
+                                   class="flex-1 bg-gold-600 hover:bg-gold-700 text-white py-2 px-4 rounded-md text-sm font-medium text-center transition-colors">
+                                    Acheter
+                                </a>
+                                <button type="button" 
+                                        class="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500">
+                                    <span class="sr-only">Ajouter au panier</span>
+                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <nav class="mt-8 flex items-center justify-between border-t border-gray-200 px-4 sm:px-0">
+                    <div class="-mt-px flex w-0 flex-1">
+                        {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
+                           class="inline-flex items-center border-t-2 border-transparent pt-4 pr-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
+                            <svg class="mr-3 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M18 10a.75.75 0 01-.75.75H4.66l2.1 1.95a.75.75 0 11-1.02 1.1l-3.5-3.25a.75.75 0 010-1.1l3.5-3.25a.75.75 0 111.02 1.1l-2.1 1.95h12.59A.75.75 0 0118 10z" clip-rule="evenodd" />
+                            </svg>
+                            Précédent
+                        </a>
+                        {% endif %}
+                    </div>
+                    <div class="hidden md:-mt-px md:flex">
+                        {% for i in page_obj.paginator.page_range %}
+                            {% if page_obj.number == i %}
+                            <a href="#" class="inline-flex items-center border-t-2 border-gold-500 px-4 pt-4 text-sm font-medium text-gold-600" aria-current="page">
+                                {{ i }}
+                            </a>
+                            {% else %}
+                            <a href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
+                               class="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
+                                {{ i }}
+                            </a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="-mt-px flex w-0 flex-1 justify-end">
+                        {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
+                           class="inline-flex items-center border-t-2 border-transparent pt-4 pl-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
+                            Suivant
+                            <svg class="ml-3 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M2 10a.75.75 0 01.75-.75h12.59l-2.1-1.95a.75.75 0 111.02-1.1l3.5 3.25a.75.75 0 010 1.1l-3.5 3.25a.75.75 0 11-1.02-1.1l2.1-1.95H2.75A.75.75 0 012 10z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        {% endif %}
+                    </div>
+                </nav>
+                {% endif %}
+                
+                {% else %}
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun produit trouvé</h3>
+                    <p class="mt-1 text-sm text-gray-500">Essayez de modifier vos critères de recherche ou de filtrage.</p>
+                    <div class="mt-6">
+                        <a href="{% url 'product_list' %}" class="inline-flex items-center rounded-md bg-gold-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gold-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-600">
+                            <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
+                            </svg>
+                            Réinitialiser les filtres
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Script pour les filtres dépliables
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des boutons de filtre
+    const filterButtons = document.querySelectorAll('[aria-controls^="filter-section-"]');
+    
+    filterButtons.forEach(button => {
+        const targetId = button.getAttribute('aria-controls');
+        const target = document.getElementById(targetId);
+        
+        // Cacher tous les panneaux de filtre par défaut
+        if (target) {
+            target.style.display = 'none';
+        }
+        
+        button.addEventListener('click', function() {
+            if (target) {
+                if (target.style.display === 'none' || !target.style.display) {
+                    target.style.display = 'block';
+                    button.setAttribute('aria-expanded', 'true');
+                    button.querySelector('svg').classList.add('rotate-45');
+                } else {
+                    target.style.display = 'none';
+                    button.setAttribute('aria-expanded', 'false');
+                    button.querySelector('svg').classList.remove('rotate-45');
+                }
+            }
+        });
+    });
+    
+    // Gestion de la soumission du formulaire de recherche
+    const searchForm = document.querySelector('input[name="q"]')?.closest('form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const searchValue = this.querySelector('input[name="q"]').value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('q', searchValue);
+            window.location.href = url.toString();
+        });
+    }
+});
+</script>
+{% endblock %}

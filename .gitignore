@@ -1,0 +1,63 @@
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+.env
+
+# Database
+*.db
+*.sqlite3
+
+# Credentials
+credentials.json
+credentials2.json
+
+# Static files
+staticfiles/
+
+# Local development
+.DS_Store
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*

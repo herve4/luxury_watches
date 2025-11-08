@@ -1,0 +1,459 @@
+<!-- templates/includes/video_banner.html -->
+{% load static %}
+
+<style>
+    .video-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 100%;
+        height: 100%;
+        transform: translate(-50%, -50%);
+        overflow: hidden;
+    }
+
+    .video-container video,
+    .video-container iframe {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        min-width: 100%;
+        min-height: 100%;
+        width: auto;
+        height: auto;
+        transform: translate(-50%, -50%);
+        object-fit: cover;
+    }
+
+    /* Style pour le contenu */
+    .video-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 20;
+        width: 100%;
+        max-width: 1200px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    /* Style pour le contenu en mode plein écran */
+    :fullscreen .video-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        padding: 2rem;
+    }
+
+    /* Ajuster la taille du texte en mode plein écran */
+    :fullscreen .video-content h1 {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+    }
+
+    :fullscreen .video-content p {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Cacher le contenu en mode plein écran pour les vidéos locales */
+    :fullscreen .video-content:not(.show-in-fullscreen) {
+        display: none;
+    }
+
+    /* Toujours afficher le contenu pour les vidéos externes (YouTube, etc.) */
+    :fullscreen .video-content.show-in-fullscreen {
+        display: flex;
+    }
+
+    /* Plein écran styles */
+    html:fullscreen {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    :fullscreen .video-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        background: #000;
+    }
+
+    /* Pour les navigateurs avec préfixe */
+    :-webkit-full-screen .video-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        background: #000;
+    }
+
+    :-ms-fullscreen .video-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        background: #000;
+    }
+
+    /* Styles pour le contenu */
+    .content-wrapper {
+        position: relative;
+        z-index: 20;
+        text-align: center;
+        transition: all 0.5s ease;
+    }
+
+    .gold-gradient {
+        background: linear-gradient(135deg, #D4AF37 0%, #FFD700 50%, #D4AF37 100%);
+    }
+
+    /* Animation d'entrée */
+    .fade-in-up {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: fadeInUp 0.8s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Délais d'animation */
+    .delay-100 {
+        animation-delay: 0.1s;
+    }
+
+    .delay-200 {
+        animation-delay: 0.2s;
+    }
+
+    .delay-300 {
+        animation-delay: 0.3s;
+    }
+</style>
+
+<div x-show="!contentLoaded" class="absolute inset-0 bg-black z-30 flex items-center justify-center">
+    <div class="text-white text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold-500 mx-auto mb-4"></div>
+        <p>Chargement de la vidéo...</p>
+    </div>
+</div>
+
+<div x-data="videoBanner" 
+     class="relative h-screen w-full overflow-hidden"
+     :class="{'fixed inset-0 z-50': isFullscreen, 'h-screen': !isFullscreen}"
+     x-ref="videoContainer">
+    
+    <!-- Video Background -->
+    <div class="absolute inset-0 w-full h-full">
+        <!-- Video Upload -->
+        <template x-if="bannerType === 'upload'">
+            <video 
+                x-ref="videoPlayer"
+                autoplay
+                muted
+                loop
+                playsinline
+                class="w-full h-full object-cover"
+                @play="isPlaying = true"
+                @pause="isPlaying = false">
+                <source :src="videoSource" type="video/mp4">
+                Votre navigateur ne supporte pas la lecture de vidéos.
+            </video>
+        </template>
+
+        <!-- Video URL (YouTube/Vimeo) -->
+        <template x-if="bannerType === 'url'">
+            <iframe 
+                x-ref="videoIframe"
+                :src="videoSource"
+                class="w-full h-full"
+                frameborder="0"
+                allow="autoplay; fullscreen"
+                allowfullscreen
+                @load="onIframeLoad">
+            </iframe>
+        </template>
+    </div>
+    
+    <!-- Overlay -->
+    <div 
+        x-show="showOverlay" 
+        :style="`opacity: ${overlayOpacity/100}`"
+        class="absolute inset-0 bg-black z-10 transition-opacity duration-300">
+    </div>
+    
+    <!-- Contenu - Positionné au centre -->
+    <div class="video-content">
+        <div class="content-wrapper"
+             :class="{'opacity-0 translate-y-4': !contentLoaded, 'opacity-100': contentLoaded}">
+            
+            <!-- Titre -->
+            <template x-if="showTitle">
+                <h1 class="font-playfair text-4xl md:text-7xl font-bold mb-6 leading-tight text-white fade-in-up"
+                    x-html="title"
+                    :class="{'hidden': isFullscreen && bannerType === 'upload'}">
+                </h1>
+            </template>
+            
+            <!-- Sous-titre -->
+            <template x-if="showSubtitle">
+                <p class="text-xl md:text-2xl text-gray-300 mb-8 font-light fade-in-up delay-100"
+                   x-html="subtitle"
+                   :class="{'hidden': isFullscreen && bannerType === 'upload'}">
+                </p>
+            </template>
+            
+            <!-- Boutons -->
+            <div x-show="showButtons" 
+                 class="flex flex-col sm:flex-row gap-4 justify-center items-center fade-in-up delay-200"
+                 :class="{'hidden': isFullscreen && bannerType === 'upload'}">
+                
+                <template x-if="button1Text">
+                    <a :href="button1Url" 
+                       class="gold-gradient text-black px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transition transform hover:scale-105"
+                       x-text="button1Text">
+                    </a>
+                </template>
+                
+                <template x-if="button2Text">
+                    <button 
+                        @click="toggleVideo"
+                        class="border border-gold-500 text-gold-500 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gold-500/10 transition"
+                        x-text="isPlaying ? 'Mettre en pause' : button2Text">
+                    </button>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contrôles vidéo -->
+    <div class="absolute bottom-8 right-8 z-20 flex items-center space-x-4"
+         :class="{'fixed bottom-8 right-8': isFullscreen}">
+        
+        <!-- Bouton Son -->
+        <button 
+            @click="toggleMute"
+            class="bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition"
+            :title="isMuted ? 'Activer le son' : 'Désactiver le son'">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      :d="isMuted ? 'M5.586 15H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z' : 'M15.536 8.464a5 5 0 010 7.072M12 5.5a7.5 7.5 0 010 13M5.636 5.636a9 9 0 000 12.728M12 2a11 11 0 00-7.778 3.222'"/>
+            </svg>
+        </button>
+        
+        <!-- Bouton Plein écran -->
+        <button 
+            @click="toggleFullscreen"
+            class="bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition"
+            :title="isFullscreen ? 'Quitter le mode plein écran' : 'Plein écran'">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      :d="isFullscreen ? 'M6 18L18 6M6 6l12 12' : 'M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4'"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('videoBanner', () => ({
+        // État initial
+        contentLoaded: false,
+        isPlaying: true,
+        isMuted: true,
+        isFullscreen: false,
+        
+        // Configuration
+        autoplay: true,
+        muted: true,
+        loop: true,
+        playsinline: true,
+        
+        // Données dynamiques
+        bannerType: '{{ video_banner.banner_type|default:"upload" }}',
+        videoSource: '{{ video_banner.video_source|default:"" }}',
+        title: `{{ video_banner.title|default:"L'Art du Temps,<br>Réinventé"|escapejs }}`,
+        subtitle: '{{ video_banner.subtitle|default:"Pièces exclusives, numérotées et certifiées"|escapejs }}',
+        showTitle: {{ video_banner.show_title|yesno:"true,false" }},
+        showSubtitle: {{ video_banner.show_subtitle|yesno:"true,false" }},
+        showButtons: {{ video_banner.show_buttons|yesno:"true,false" }},
+        showOverlay: {{ video_banner.show_overlay|yesno:"true,false" }},
+        overlayOpacity: {{ video_banner.overlay_opacity|default:70 }},
+        button1Text: '{{ video_banner.button_1_text|default:"Découvrir la Collection"|escapejs }}',
+        button1Url: '{{ video_banner.button_1_url|default:"#products"|escapejs }}',
+        button2Text: '{{ video_banner.button_2_text|default:"Voir la Vidéo"|escapejs }}',
+        
+        // Initialisation
+        init() {
+            this.$nextTick(() => {
+                // Préparer l'URL pour les vidéos externes
+                if (this.bannerType === 'url') {
+                    this.prepareExternalVideoUrl();
+                }
+                
+                // Délai pour l'animation d'entrée
+                setTimeout(() => {
+                    this.contentLoaded = true;
+                    
+                    // Démarrer la lecture si c'est une vidéo locale
+                    if (this.bannerType === 'upload' && this.$refs.videoPlayer) {
+                        const playPromise = this.$refs.videoPlayer.play();
+                        if (playPromise !== undefined) {
+                            playPromise.catch(error => {
+                                console.error("Erreur de lecture automatique:", error);
+                                // Essayer de démarrer après une interaction utilisateur
+                                document.addEventListener('click', () => {
+                                    this.$refs.videoPlayer.play();
+                                }, { once: true });
+                            });
+                        }
+                    }
+                }, 500);
+                
+                // Gestion du plein écran
+                document.addEventListener('fullscreenchange', this.handleFullscreenChange.bind(this));
+                document.addEventListener('webkitfullscreenchange', this.handleFullscreenChange.bind(this));
+                document.addEventListener('mozfullscreenchange', this.handleFullscreenChange.bind(this));
+                document.addEventListener('MSFullscreenChange', this.handleFullscreenChange.bind(this));
+            });
+        },
+        
+        // Préparer l'URL pour les vidéos externes
+        prepareExternalVideoUrl() {
+            if (this.bannerType === 'url' && this.videoSource) {
+                let url = this.videoSource;
+                
+                // YouTube
+                if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                    const videoId = this.extractYouTubeId(url);
+                    if (videoId) {
+                        url = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&modestbranding=1&rel=0`;
+                    }
+                }
+                // Vimeo
+                else if (url.includes('vimeo.com')) {
+                    const videoId = url.split('/').pop();
+                    url = `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1&loop=1&background=1`;
+                }
+                
+                this.videoSource = url;
+            }
+        },
+        
+        // Extraire l'ID d'une vidéo YouTube
+        extractYouTubeId(url) {
+            const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[7].length === 11) ? match[7] : null;
+        },
+        
+        // Gestion du changement de mode plein écran
+        handleFullscreenChange() {
+            this.isFullscreen = !!(document.fullscreenElement || 
+                                document.webkitFullscreenElement || 
+                                document.mozFullScreenElement || 
+                                document.msFullscreenElement);
+            
+            if (this.isFullscreen) {
+                document.documentElement.style.overflow = 'hidden';
+                // Pour les vidéos locales, cacher le contenu en plein écran
+                if (this.bannerType === 'upload') {
+                    document.querySelector('.video-content').classList.remove('show-in-fullscreen');
+                } else {
+                    document.querySelector('.video-content').classList.add('show-in-fullscreen');
+                }
+            } else {
+                document.documentElement.style.overflow = '';
+                // Toujours afficher le contenu en sortie du mode plein écran
+                document.querySelector('.video-content').classList.add('show-in-fullscreen');
+            }
+        },
+
+        // Méthodes
+        toggleVideo() {
+            if (this.bannerType === 'upload') {
+                if (this.$refs.videoPlayer.paused) {
+                    this.$refs.videoPlayer.play();
+                    this.isPlaying = true;
+                } else {
+                    this.$refs.videoPlayer.pause();
+                    this.isPlaying = false;
+                }
+            } else {
+                // Pour les iframes (YouTube/Vimeo), on ne peut pas contrôler la lecture directement
+                this.isPlaying = !this.isPlaying;
+            }
+        },
+        
+        toggleMute() {
+            this.isMuted = !this.isMuted;
+            if (this.bannerType === 'upload') {
+                this.$refs.videoPlayer.muted = this.isMuted;
+            }
+        },
+        
+        toggleFullscreen() {
+            if (!this.isFullscreen) {
+                // Entrer en plein écran
+                const element = this.$refs.videoContainer;
+                if (element.requestFullscreen) {
+                    element.requestFullscreen().catch(err => {
+                        console.error(`Erreur lors du passage en plein écran: ${err.message}`);
+                    });
+                } else if (element.webkitRequestFullscreen) {
+                    element.webkitRequestFullscreen();
+                } else if (element.mozRequestFullScreen) {
+                    element.mozRequestFullScreen();
+                } else if (element.msRequestFullscreen) {
+                    element.msRequestFullscreen();
+                }
+            } else {
+                // Quitter le plein écran
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        },
+        
+        onVideoEnded() {
+            if (!this.loop) {
+                this.isPlaying = false;
+            }
+        },
+        
+        onIframeLoad() {
+            // Pour les iframes, on considère que la vidéo est en lecture
+            this.isPlaying = true;
+        }
+    }));
+});
+</script>

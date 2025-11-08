@@ -1,0 +1,23 @@
+/* Animations pour les transitions */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Effets de hover premium */
+.configuration-option {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.configuration-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(212, 175, 55, 0.1);
+}
+
+.option-selected {
+    box-shadow: 0 0 0 2px #D4AF37, 0 10px 25px -5px rgba(212, 175, 55, 0.2);
+}

@@ -1,0 +1,139 @@
+<!-- Modal de commande -->
+{% if show_order_modal and product %}
+<div id="orderModal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" x-data="{ show: true, isSubmitting: false }">
+    <div class="bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" 
+         @click.away="show = false"
+         x-show="show"
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95">
+        
+        <!-- En-tête -->
+        <div class="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="font-playfair text-2xl font-semibold text-white">Finaliser votre commande</h3>
+                <button @click="show = false" class="text-gray-400 hover:text-white transition p-2 -mr-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contenu -->
+        <div class="p-6">
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Image du produit -->
+                <div class="bg-gray-800 rounded-xl p-6 flex items-center justify-center">
+                    {% if product.images.first %}
+                    <img src="{{ product.images.first.image.url }}" 
+                         alt="{{ product.name }}"
+                         class="max-h-64 object-contain">
+                    {% endif %}
+                </div>
+                
+                <!-- Détails de la commande -->
+                <div>
+                    <h4 class="text-xl font-bold text-white mb-2">{{ product.name }}</h4>
+                    <p class="text-gold-500 text-lg font-medium mb-4">{{ product.price|floatformat:0 }} FCFA</p>
+                    
+                    <form id="orderForm" @submit.prevent="submitOrder">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-gray-400 mb-1">Nom complet</label>
+                                <input type="text" id="name" name="name" required
+                                       class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-400 mb-1">Email</label>
+                                <input type="email" id="email" name="email" required
+                                       class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-gray-400 mb-1">Téléphone</label>
+                                <input type="tel" id="phone" name="phone" required
+                                       class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent">
+                            </div>
+                            
+                            <div>
+                                <label for="address" class="block text-sm font-medium text-gray-400 mb-1">Adresse de livraison</label>
+                                <textarea id="address" name="address" rows="3" required
+                                          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent"></textarea>
+                            </div>
+                            
+                            <div class="pt-2">
+                                <button type="submit" 
+                                        class="w-full bg-gold-500 hover:bg-gold-600 text-black font-medium py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center"
+                                        :disabled="isSubmitting">
+                                    <span x-text="isSubmitting ? 'Traitement...' : 'Confirmer la commande'"></span>
+                                    <svg x-show="isSubmitting" class="animate-spin ml-2 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('orderForm', () => ({
+            isSubmitting: false,
+            
+            submitOrder() {
+                this.isSubmitting = true;
+                
+                // Récupérer les données du formulaire
+                const formData = new FormData(document.getElementById('orderForm'));
+                const orderData = Object.fromEntries(formData.entries());
+                
+                // Récupérer les données de configuration du localStorage
+                const configData = JSON.parse(localStorage.getItem('currentOrder') || '{}');
+                
+                // Fusionner les données
+                const completeOrder = {
+                    ...orderData,
+                    ...configData,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Simuler un envoi au serveur
+                setTimeout(() => {
+                    console.log('Commande soumise:', completeOrder);
+                    
+                    // Ici, vous pourriez ajouter l'appel AJAX vers votre API
+                    // fetch('/api/orders/', {
+                    //     method: 'POST',
+                    //     headers: { 'Content-Type': 'application/json' },
+                    //     body: JSON.stringify(completeOrder)
+                    // })
+                    // .then(response => response.json())
+                    // .then(data => {
+                    //     // Gérer la réponse du serveur
+                    // });
+                    
+                    // Afficher un message de succès
+                    alert('Votre commande a été enregistrée avec succès !');
+                    
+                    // Fermer le modal
+                    this.$refs.orderModal.remove();
+                    
+                    // Rediriger vers la page de confirmation
+                    window.location.href = '{% url 'order_detail' 0 %}'.replace('0', '123'); // Remplacer par l'ID réel de la commande
+                    
+                }, 1500);
+            }
+        }));
+    });
+</script>
+{% endif %}

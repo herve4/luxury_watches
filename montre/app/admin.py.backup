@@ -1,0 +1,641 @@
+from django.contrib import admin
+from django.utils.html import format_html
+from django.urls import reverse
+from django.db.models import Count, Sum, Avg
+from django.http import HttpResponse
+import csv
+from .models import (
+    Category, SubCategory, Product, ProductImage, ProductVariant, 
+    CustomerLead, Order, WatchConfiguration, ProductOptionType, 
+    ProductOptionValue, Review, Comment
+)
+from django import forms
+from django.contrib.admin.widgets import FilteredSelectMultiple
+
+# Filtres personnalisés
+class FeaturedFilter(admin.SimpleListFilter):
+    title = 'Produit en vedette'
+    parameter_name = 'is_featured'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('yes', 'En vedette'),
+            ('no', 'Non vedette'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'yes':
+            return queryset.filter(is_featured=True)
+        if self.value() == 'no':
+            return queryset.filter(is_featured=False)
+
+class ContactedFilter(admin.SimpleListFilter):
+    title = 'Lead contacté'
+    parameter_name = 'contacted'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('contacted', 'Contactés'),
+            ('not_contacted', 'Non contactés'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'contacted':
+            return queryset.filter(contacted=True)
+        if self.value() == 'not_contacted':
+            return queryset.filter(contacted=False)
+
+class ConfigurationStatusFilter(admin.SimpleListFilter):
+    title = 'Statut de configuration'
+    parameter_name = 'configuration_status'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('complete', 'Configurations complètes'),
+            ('incomplete', 'Configurations incomplètes'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'complete':
+            return queryset.filter(prix_total__gt=0)
+        if self.value() == 'incomplete':
+            return queryset.filter(prix_total=0)
+
+# Inlines
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+    fields = ['image', 'alt_text', 'is_featured', 'image_preview']
+    readonly_fields = ['image_preview']
+    
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="max-height: 100px;" />', obj.image.url)
+        return "Aucune image"
+    image_preview.short_description = "Aperçu"
+
+class ReviewInline(admin.TabularInline):
+    model = Review
+    extra = 0
+    readonly_fields = ['user', 'rating', 'title', 'comment', 'created_at']
+    can_delete = False
+    
+    def has_add_permission(self, request, obj):
+        return False
+
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
+    extra = 1
+    fields = ['name', 'price_modifier', 'variant_preview']
+    readonly_fields = ['variant_preview']
+
+    def variant_preview(self, obj):
+        if obj.pk:
+            return format_html(
+                '<span style="color: #D4AF37; font-weight: bold;">+{} €</span>',
+                obj.price_modifier
+            )
+        return "-"
+    variant_preview.short_description = "Modificateur de prix"
+
+class WatchConfigurationInline(admin.TabularInline):
+    model = WatchConfiguration
+    extra = 0
+    fields = ['cadran_display', 'bracelet_display', 'finition_display', 'prix_total_display']
+    readonly_fields = ['cadran_display', 'bracelet_display', 'finition_display', 'prix_total_display']
+    can_delete = False
+    max_num = 0
+    fk_name = 'product'  # Explicitly set the foreign key name
+    
+    def cadran_display(self, obj):
+        return obj.get_cadran_display()
+    cadran_display.short_description = "Cadran"
+    
+    def bracelet_display(self, obj):
+        return obj.get_bracelet_display()
+    
+    def finition_display(self, obj):
+        return obj.get_finition_display()
+    finition_display.short_description = "Finition"
+    
+    def get_prix_total(self, obj):
+        return obj.calculate_price() if hasattr(obj, 'calculate_price') else 0
+    get_prix_total.short_description = "Prix Total (FCFA)"
+    
+    def prix_total_display(self, obj):
+        return format_html(
+            '<span style="color: #D4AF37; font-weight: bold;">{:,} FCFA</span>',
+            self.get_prix_total(obj)
+        )
+    prix_total_display.short_description = "Prix Total"
+    
+    def has_add_permission(self, request, obj):
+        return False
+
+# Actions personnalisées
+@admin.action(description="Marquer comme vedette")
+def make_featured(modeladmin, request, queryset):
+    queryset.update(is_featured=True)
+
+@admin.action(description="Retirer des vedettes")
+def remove_featured(modeladmin, request, queryset):
+    queryset.update(is_featured=False)
+
+@admin.action(description="Marquer comme contacté")
+def mark_contacted(modeladmin, request, queryset):
+    queryset.update(contacted=True)
+
+@admin.action(description="Exporter les leads sélectionnés (CSV)")
+def export_leads(modeladmin, request, queryset):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="leads_export.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Email', 'Téléphone', 'Produit d\'intérêt', 'Contacté', 'Date de création'])
+    
+    for lead in queryset:
+        product_name = lead.product_interest.name if lead.product_interest else "Non spécifié"
+        contacted = "Oui" if lead.contacted else "Non"
+        writer.writerow([
+            lead.email,
+            lead.phone or "",
+            product_name,
+            contacted,
+            lead.created_at.strftime("%d/%m/%Y %H:%M")
+        ])
+    
+    return response
+
+@admin.action(description="Recalculer les prix des configurations")
+def recalculate_prices(modeladmin, request, queryset):
+    for config in queryset:
+        config.calculate_price()
+        config.save()
+    modeladmin.message_user(
+        request, 
+        f"Prix recalculés pour {queryset.count()} configuration(s)"
+    )
+
+@admin.action(description="Exporter les configurations (CSV)")
+def export_configurations(modeladmin, request, queryset):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="configurations_export.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Produit', 'Cadran', 'Bracelet', 'Finition', 'Prix Total', 'Date de création'])
+    
+    for config in queryset:
+        writer.writerow([
+            config.product.name,
+            config.get_cadran_display(),
+            config.get_bracelet_display(),
+            config.get_finition_display(),
+            f"{config.prix_total:,.0f} FCFA".replace(",", " "),  # Format avec espace comme séparateur de milliers
+            config.created_at.strftime("%d/%m/%Y %H:%M")
+        ])
+    
+    return response
+
+@admin.action(description="Exporter les commandes (CSV)")
+def export_orders(modeladmin, request, queryset):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="commandes_export.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['ID', 'Email Lead', 'Produit', 'Prix Total', 'Date de commande'])
+    
+    for order in queryset:
+        writer.writerow([
+            order.id,
+            order.lead.email,
+            order.product.name,
+            f"{order.total_price:,.0f} FCFA".replace(",", " "),  # Format avec espace comme séparateur de milliers
+            order.created_at.strftime("%d/%m/%Y %H:%M")
+        ])
+    
+    return response
+
+# Admin classes
+    list_display = [
+        'image_preview',
+        'name', 
+        'price', 
+        'is_featured_display', 
+        'variant_count',
+        'configuration_count',
+        'created_at'
+    ]
+    list_display_links = ['name', 'image_preview']
+    list_filter = [FeaturedFilter, 'created_at']
+    list_editable = ['price']
+    search_fields = ['name', 'description']
+    readonly_fields = ['created_at', 'image_admin_preview', 'configuration_stats']
+    fieldsets = [
+        ('Informations principales', {
+            'fields': [
+                'name', 
+                'description', 
+                'price', 
+                'is_featured',
+                'image',
+                'image_admin_preview'
+            ]
+        }),
+        ('Spécifications techniques', {
+            'fields': ['specifications'],
+            'classes': ['collapse']
+        }),
+        ('Caractéristiques', {
+            'fields': ['features'],
+            'classes': ['collapse']
+        }),
+        ('Statistiques', {
+            'fields': ['configuration_stats'],
+            'classes': ['collapse']
+        }),
+        ('Métadonnées', {
+            'fields': ['created_at'],
+            'classes': ['collapse']
+        })
+    ]
+    inlines = [ProductVariantInline, WatchConfigurationInline]
+    actions = [make_featured, remove_featured]
+    
+    # Personnalisation de l'affichage dans la liste
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;" />',
+                obj.image.url
+            )
+        return "❌"
+    image_preview.short_description = "Image"
+
+    def image_admin_preview(self, obj):
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="width: 200px; height: auto; border-radius: 8px; border: 2px solid #D4AF37;" />',
+                obj.image.url
+            )
+        return "Aucune image"
+    image_admin_preview.short_description = "Aperçu de l'image"
+
+    def is_featured_display(self, obj):
+        if obj.is_featured:
+            return format_html(
+                '<span style="color: #D4AF37; font-weight: bold;">★ VEDETTE</span>'
+            )
+        return "—"
+    is_featured_display.short_description = "Vedette"
+
+    def variant_count(self, obj):
+        count = obj.productvariant_set.count()
+        color = "#D4AF37" if count > 0 else "#666"
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{} variante(s)</span>',
+            color, count
+        )
+    variant_count.short_description = "Variantes"
+
+    def configuration_count(self, obj):
+        count = obj.watchconfiguration_set.count()
+        color = "#D4AF37" if count > 0 else "#666"
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{} config(s)</span>',
+            color, count
+        )
+    configuration_count.short_description = "Configurations"
+
+    def configuration_stats(self, obj):
+        configs = obj.watchconfiguration_set.all()
+        if configs:
+            total_configs = configs.count()
+            avg_price = sum(config.prix_total for config in configs) / total_configs
+            
+            # Statistiques par option
+            cadran_stats = {}
+            bracelet_stats = {}
+            finition_stats = {}
+            
+            for config in configs:
+                cadran_stats[config.cadran] = cadran_stats.get(config.cadran, 0) + 1
+                bracelet_stats[config.bracelet] = bracelet_stats.get(config.bracelet, 0) + 1
+                finition_stats[config.finition] = finition_stats.get(config.finition, 0) + 1
+            
+            # Construction du HTML
+            html = f"<div style='background: #1F2937; padding: 15px; border-radius: 8px;'>"
+            html += f"<h4 style='color: #D4AF37; margin-bottom: 10px;'>Statistiques des Configurations</h4>"
+            html += f"<p><strong>Total:</strong> {total_configs} configuration(s)</p>"
+            html += f"<p><strong>Prix moyen:</strong> {avg_price:,.0f} FCFA</p>"
+            
+            html += "<div style='display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;'>"
+            
+            # Cadran
+            html += "<div>"
+            html += "<h5 style='color: #D4AF37; margin-bottom: 5px;'>Cadrans</h5>"
+            for cadran, count in cadran_stats.items():
+                html += f"<p style='margin: 2px 0;'>{configs[0].get_cadran_display() if configs else cadran}: {count}</p>"
+            html += "</div>"
+            
+            # Bracelet
+            html += "<div>"
+            html += "<h5 style='color: #D4AF37; margin-bottom: 5px;'>Bracelets</h5>"
+            for bracelet, count in bracelet_stats.items():
+                html += f"<p style='margin: 2px 0;'>{configs[0].get_bracelet_display() if configs else bracelet}: {count}</p>"
+            html += "</div>"
+            
+            # Finition
+            html += "<div>"
+            html += "<h5 style='color: #D4AF37; margin-bottom: 5px;'>Finitions</h5>"
+            for finition, count in finition_stats.items():
+                html += f"<p style='margin: 2px 0;'>{configs[0].get_finition_display() if configs else finition}: {count}</p>"
+            html += "</div>"
+            
+            html += "</div></div>"
+            return format_html(html)
+        return "Aucune configuration pour ce produit"
+    configuration_stats.short_description = "Statistiques des Configurations"
+
+@admin.register(WatchConfiguration)
+class WatchConfigurationAdmin(admin.ModelAdmin):
+    list_display = [
+        'product_link',
+        'cadran_display',
+        'bracelet_display', 
+        'finition_display',
+        'prix_total_display',
+        'base_price_display',
+        'supplements_display',
+        'created_display'
+    ]
+    list_filter = [ConfigurationStatusFilter, 'product', 'cadran', 'bracelet', 'finition']
+    search_fields = ['product__name', 'cadran', 'bracelet', 'finition']
+    readonly_fields = ['prix_total_display', 'created_at', 'configuration_details']
+    list_per_page = 20
+    
+    fieldsets = [
+        ('Produit', {
+            'fields': ['product']
+        }),
+        ('Configuration', {
+            'fields': ['cadran', 'bracelet', 'finition']
+        }),
+        ('Prix', {
+            'fields': ['prix_total_display', 'configuration_details']
+        }),
+        ('Métadonnées', {
+            'fields': ['created_at'],
+            'classes': ['collapse']
+        })
+    ]
+    
+    actions = [recalculate_prices, export_configurations]
+    
+    def product_link(self, obj):
+        url = reverse('admin:app_product_change', args=[obj.product.id])
+        return format_html(
+            '<a href="{}" style="color: #D4AF37; font-weight: bold;">{}</a>',
+            url, obj.product.name
+        )
+    product_link.short_description = "Produit"
+    
+    def cadran_display(self, obj):
+        return obj.get_cadran_display()
+    cadran_display.short_description = "Cadran"
+    
+    def bracelet_display(self, obj):
+        return obj.get_bracelet_display()
+    bracelet_display.short_description = "Bracelet"
+    
+    def finition_display(self, obj):
+        return obj.get_finition_display()
+    finition_display.short_description = "Finition"
+    
+    def prix_total_display(self, obj):
+        return format_html(
+            '<span style="color: #D4AF37; font-weight: bold; font-size: 1.1em;">{} FCFA</span>',
+            f"{obj.prix_total:,.0f}".replace(",", " ")  # Format avec espace comme séparateur de milliers
+        )
+    prix_total_display.short_description = "Prix Total (FCFA)"
+    
+    def base_price_display(self, obj):
+        return format_html(
+            '<span style="color: #6B7280;">{} FCFA</span>',
+            f"{obj.product.price:,.0f}".replace(",", " ")  # Format avec espace comme séparateur de milliers
+        )
+    base_price_display.short_description = "Prix de Base (FCFA)"
+    
+    def supplements_display(self, obj):
+        supplements = obj.prix_total - obj.product.price
+        if supplements > 0:
+            return format_html(
+                '<span style="color: #10B981; font-weight: bold;">+{} FCFA</span>',
+                f"{supplements:,.0f}".replace(",", " ")  # Format avec espace comme séparateur de milliers
+            )
+        return "—"
+    supplements_display.short_description = "Suppléments (FCFA)"
+    
+    def created_display(self, obj):
+        return obj.created_at.strftime("%d/%m/%Y")
+    created_display.short_description = "Créé le"
+    
+    def configuration_details(self, obj):
+        supplements = obj.prix_total - obj.product.price
+        html = "<div style='background: #1F2937; padding: 15px; border-radius: 8px; margin-top: 10px;'>"
+        html += "<h4 style='color: #D4AF37; margin-bottom: 10px;'>Détails du Prix</h4>"
+        html += f"<p><strong>Prix de base:</strong> {obj.product.price:,.0f} FCFA</p>"
+        
+        if supplements > 0:
+            html += f"<p><strong>Supplements:</strong> <span style='color: #10B981;'>+{supplements:,.0f} FCFA</span></p>"
+            html += "<p><strong>Détail des options:</strong></p>"
+            html += "<ul style='color: #E5E7EB; margin-left: 20px;'>"
+            
+            # Détail des suppléments (à adapter selon votre logique de prix)
+            if obj.bracelet == 'or_18k':
+                html += "<li>Bracelet Or 18K: +1 500 000 FCFA</li>"
+            elif obj.bracelet in ['cuir_noir', 'cuir_brun', 'titane']:
+                html += "<li>Bracelet premium: +300 000 FCFA</li>"
+                
+            if obj.finition == 'brossée':
+                html += "<li>Finition brossée: +200 000 FCFA</li>"
+            elif obj.finition == 'satinée':
+                html += "<li>Finition satinée: +100 000 FCFA</li>"
+                
+            if obj.cadran in ['bleu_soleil', 'argent_brume']:
+                html += "<li>Cadran premium: +150 000-200 000 FCFA</li>"
+                
+            html += "</ul>"
+        else:
+            html += "<p><em>Configuration standard - pas de supplément</em></p>"
+            
+        html += f"<p style='border-top: 1px solid #374151; padding-top: 10px; margin-top: 10px;'><strong>Total:</strong> <span style='color: #D4AF37; font-weight: bold;'>{obj.prix_total:,.0f} FCFA</span></p>"
+        html += "</div>"
+        return format_html(html)
+    configuration_details.short_description = "Détails de la Configuration"
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('product')
+
+@admin.register(ProductVariant)
+class ProductVariantAdmin(admin.ModelAdmin):
+    list_display = [
+        'product_link',
+        'name', 
+        'price_modifier',
+        'total_price_display'
+    ]
+    list_filter = ['product']
+    search_fields = ['name', 'product__name']
+    
+    def product_link(self, obj):
+        url = reverse('admin:app_product_change', args=[obj.product.id])
+        return format_html(
+            '<a href="{}" style="color: #D4AF37; font-weight: bold;">{}</a>',
+            url, obj.product.name
+        )
+    product_link.short_description = "Produit"
+
+    def total_price_display(self, obj):
+        total = obj.product.price + obj.price_modifier
+        return format_html(
+            '<span style="color: #D4AF37; font-weight: bold;">{} FCFA</span>',
+            f"{total:,.0f}".replace(",", " ")  # Format avec espace comme séparateur de milliers
+        )
+    total_price_display.short_description = "Prix total"
+
+@admin.register(CustomerLead)
+class CustomerLeadAdmin(admin.ModelAdmin):
+    list_display = [
+        'email',
+        'phone_display', 
+        'product_interest',
+        'contacted_display',
+        'created_at',
+        'order_count'
+    ]
+    list_filter = [ContactedFilter, 'created_at', 'product_interest']
+    search_fields = ['email', 'phone', 'product_interest__name']
+    readonly_fields = ['created_at']
+    actions = [mark_contacted, export_leads]
+    
+    fieldsets = [
+        ('Informations du lead', {
+            'fields': ['email', 'phone', 'product_interest']
+        }),
+        ('Statut', {
+            'fields': ['contacted']
+        }),
+        ('Métadonnées', {
+            'fields': ['created_at'],
+            'classes': ['collapse']
+        })
+    ]
+    
+    def phone_display(self, obj):
+        return obj.phone if obj.phone else "-"
+    phone_display.short_description = "Téléphone"
+    
+    def product_interest(self, obj):
+        if obj.product_interest:
+            url = reverse('admin:app_product_change', args=[obj.product_interest.id])
+            return format_html('<a href="{}">{}</a>', url, obj.product_interest.name)
+        return "-"
+    product_interest.short_description = "Produit d'intérêt"
+    
+    def contacted_display(self, obj):
+        if obj.contacted:
+            return format_html(
+                '<span style="color: #10B981; font-weight: bold;">✓ CONTACTÉ</span>'
+            )
+        return format_html(
+            '<span style="color: #EF4444;">Non contacté</span>'
+        )
+    contacted_display.short_description = "Statut"
+    
+    def order_count(self, obj):
+        return obj.orders.count()
+    order_count.short_description = "Commandes"
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'lead_email',
+        'product_link',
+        'total_price_display',
+        'created_at',
+        'configuration_summary'
+    ]
+    list_filter = ['created_at', 'lead__product_interest']
+    search_fields = [
+        'lead__email', 
+        'lead__product_interest__name',
+        'configuration_data'
+    ]
+    readonly_fields = ['created_at', 'configuration_preview']
+    actions = [export_orders]
+    
+    fieldsets = [
+        ('Informations de commande', {
+            'fields': ['lead', 'total_price']
+        }),
+        ('Configuration', {
+            'fields': ['configuration_data', 'configuration_preview']
+        }),
+        ('Métadonnées', {
+            'fields': ['created_at'],
+            'classes': ['collapse']
+        })
+    ]
+
+    def lead_email(self, obj):
+        url = reverse('admin:app_customerlead_change', args=[obj.lead.id])
+        return format_html(
+            '<a href="{}" style="color: #D4AF37;">{}</a>',
+            url, obj.lead.email
+        )
+    lead_email.short_description = "Lead"
+
+    def product_link(self, obj):
+        url = reverse('admin:app_product_change', args=[obj.product.id])
+        return format_html(
+            '<a href="{}" style="color: #D4AF37;">{}</a>',
+            url, obj.product.name
+        )
+    product_link.short_description = "Produit"
+
+    def total_price_display(self, obj):
+        return format_html(
+            '<span style="color: #D4AF37; font-weight: bold;">{} FCFA</span>',
+            f"{obj.total_price:,.0f}".replace(",", " ")  # Format avec espace comme séparateur de milliers
+        )
+    total_price_display.short_description = "Prix total"
+
+    def configuration_summary(self, obj):
+        config = obj.configuration_data
+        if isinstance(config, dict) and config:
+            summary = []
+            for key, value in list(config.items())[:2]:  # Affiche les 2 premières options
+                summary.append(f"{key}: {value}")
+            return ", ".join(summary)
+        return "—"
+    configuration_summary.short_description = "Configuration"
+
+    def configuration_preview(self, obj):
+        if obj.configuration_data:
+            config_html = "<div style='background: #1F2937; padding: 15px; border-radius: 8px; margin-top: 10px;'>"
+            config_html += "<h4 style='color: #D4AF37; margin-bottom: 10px;'>Détails de la configuration :</h4>"
+            config_html += "<ul style='color: #E5E7EB;'>"
+            
+            for key, value in obj.configuration_data.items():
+                config_html += f"<li><strong>{key}:</strong> {value}</li>"
+            
+            config_html += "</ul></div>"
+            return format_html(config_html)
+        return "Aucune configuration"
+    configuration_preview.short_description = "Aperçu de la configuration"
+
+# Personnalisation du header de l'admin
+admin.site.site_header = "Administration TEMPORIS - Montres de Luxe"
+admin.site.site_title = "TEMPORIS Admin"
+admin.site.index_title = "Tableau de bord des montres de luxe"

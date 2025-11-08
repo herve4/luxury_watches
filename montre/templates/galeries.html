@@ -1,0 +1,244 @@
+    {% load static %}
+    <!-- Section Galerie -->
+    <div class="container mx-auto px-4 py-12" x-data="gallery()">
+        <!-- Titre et description -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Notre Galerie</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">Découvrez notre collection d'œuvres exceptionnelles.</p>
+        </div>
+
+        <!-- Filtres -->
+        <div class="flex flex-wrap justify-center gap-4 mb-8">
+            <button 
+                @click="filter = 'all'"
+                :class="filter === 'all' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'"
+                class="px-4 py-2 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md"
+            >
+                Tous
+            </button>
+            <button 
+                @click="filter = 'nature'"
+                :class="filter === 'nature' ? 'bg-green-600 text-white' : 'bg-white text-gray-700'"
+                class="px-4 py-2 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md"
+            >
+                Gravures
+            </button>
+            <button 
+                @click="filter = 'art'"
+                :class="filter === 'art' ? 'bg-purple-600 text-white' : 'bg-white text-gray-700'"
+                class="px-4 py-2 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md"
+            >
+                Finitions
+            </button>
+            <button 
+                @click="filter = 'architecture'"
+                :class="filter === 'architecture' ? 'bg-amber-600 text-white' : 'bg-white text-gray-700'"
+                class="px-4 py-2 rounded-lg shadow-sm transition-all duration-300 hover:shadow-md"
+            >
+                Serrures
+            </button>
+        </div>
+
+        <!-- Grille de galerie -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <template x-for="item in filteredItems" :key="item.id">
+                <div 
+                    class="group relative overflow-hidden rounded-xl shadow-lg cursor-pointer transform transition-all duration-500 hover:scale-105"
+                    @click="openModal(item)"
+                >
+                    <div class="aspect-w-1 aspect-h-1 bg-gray-200">
+                        <img 
+                            :src="item.image" 
+                            :alt="item.title"
+                            class="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"
+                        >
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        <div class="text-white">
+                            <h3 class="font-bold text-lg" x-text="item.title"></h3>
+                            <p class="text-sm" x-text="item.category"></p>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Modal pour afficher l'image en grand -->
+        <div 
+            x-show="isModalOpen" 
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+            @click="isModalOpen = false"
+            x-cloak
+        >
+            <div 
+                class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl transform transition-all duration-300"
+                @click.stop
+            >
+                <div class="relative">
+                    <button 
+                        @click="isModalOpen = false"
+                        class="absolute top-4 right-4 bg-white/80 hover:bg-white text-gray-800 rounded-full w-10 h-10 flex items-center justify-center z-10 transition-all duration-300"
+                    >
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <img 
+                        :src="selectedItem.image" 
+                        :alt="selectedItem.title"
+                        class="w-full h-auto max-h-[70vh] object-contain"
+                    >
+                </div>
+                <div class="p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2" x-text="selectedItem.title"></h2>
+                    <p class="text-gray-600 mb-4" x-text="selectedItem.description"></p>
+                    <div class="flex justify-between items-center">
+                        <span class="inline-block px-3 py-1 rounded-full text-sm font-medium" 
+                              :class="{
+                                  'bg-green-100 text-green-800': selectedItem.category === 'nature',
+                                  'bg-purple-100 text-purple-800': selectedItem.category === 'art',
+                                  'bg-amber-100 text-amber-800': selectedItem.category === 'architecture'
+                              }"
+                              x-text="selectedItem.category"></span>
+                        <div class="flex space-x-2">
+                            <button 
+                                @click="prevItem"
+                                class="bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-300"
+                            >
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button 
+                                @click="nextItem"
+                                class="bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-300"
+                            >
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('gallery', () => ({
+                filter: 'all',
+                isModalOpen: false,
+                selectedItem: {},
+                items: [
+                    {
+                        id: 1,
+                        title: 'Montre de luxe',
+                        category: 'Gravures',
+                        image: '{% static "images/montre1.jpg" %}',
+                        description: 'Le luxe et l\'élégance fusionnent dans cette TAG Heuer Link de 32 mm.'
+                    },
+                    {
+                        id: 2,
+                        title: 'Montre de luxe',
+                        category: 'Gravures',
+                        image: '{% static "images/montre2.jpg" %}',
+                        description: 'Une œuvre d\'art abstraite moderne utilisant des couleurs vives et des formes géométriques.'
+                    },
+                    {
+                        id: 3,
+                        title: 'Montre de luxe',
+                        category: 'Gravures',
+                        image: '{% static "images/montre3.jpg" %}',
+                        description: 'Un gratte-ciel futuriste avec une architecture innovante et des reflets spectaculaires.'
+                    },
+                    {
+                        id: 4,
+                        title: 'Montre de luxe',
+                        category: 'Gravures',
+                        image: '{% static "images/montre4.jpg" %}',
+                        description: 'Une cascade impressionnante au cœur d\'une vallée verdoyante, symbole de la puissance de la nature.'
+                    },
+                    {
+                        id: 5,
+                        title: 'Montre de luxe',
+                        category: 'Gravures',
+                        image: '{% static "images/montre5.jpg" %}',
+                        description: 'Une sculpture contemporaine en métal qui joue avec les formes et l\'espace.'
+                    },
+                    {
+                        id: 6,
+                        title: 'Montre de luxe',
+                        category: 'Gravures',
+                        image: '{% static "images/montre6.jpg" %}',
+                        description: 'Un pont architectural remarquable alliant esthétique et fonctionnalité.'
+                    },
+                    {
+                        id: 7,
+                        title: 'Montre de luxe',
+                        category: 'Gravures',
+                        image: '{% static "images/montre7.jpg" %}',
+                        description: 'Un paysage montagneux spectaculaire avec des sommets enneigés se reflétant dans un lac cristallin.'
+                    },
+                    {
+                        id: 8,
+                        title: 'Montre de luxe',
+                        category: 'Gravures',
+                        image: '{% static "images/montre8.jpg" %}',
+                        description: 'Une peinture classique représentant une scène historique avec un réalisme impressionnant.'
+                    }
+                ],
+                get filteredItems() {
+                    if (this.filter === 'all') {
+                        return this.items;
+                    }
+                    return this.items.filter(item => item.category === this.filter);
+                },
+                openModal(item) {
+                    this.selectedItem = item;
+                    this.isModalOpen = true;
+                },
+                nextItem() {
+                    const currentIndex = this.items.findIndex(item => item.id === this.selectedItem.id);
+                    const nextIndex = (currentIndex + 1) % this.items.length;
+                    this.selectedItem = this.items[nextIndex];
+                },
+                prevItem() {
+                    const currentIndex = this.items.findIndex(item => item.id === this.selectedItem.id);
+                    const prevIndex = (currentIndex - 1 + this.items.length) % this.items.length;
+                    this.selectedItem = this.items[prevIndex];
+                }
+            }))
+        });
+    </script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+        
+        /* Animation personnalisée pour l'apparition des éléments */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .group {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        /* Animation pour les éléments de la grille avec délai */
+        .group:nth-child(1) { animation-delay: 0.1s; }
+        .group:nth-child(2) { animation-delay: 0.2s; }
+        .group:nth-child(3) { animation-delay: 0.3s; }
+        .group:nth-child(4) { animation-delay: 0.4s; }
+        .group:nth-child(5) { animation-delay: 0.5s; }
+        .group:nth-child(6) { animation-delay: 0.6s; }
+        .group:nth-child(7) { animation-delay: 0.7s; }
+        .group:nth-child(8) { animation-delay: 0.8s; }
+    </style>

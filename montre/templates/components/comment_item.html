@@ -1,0 +1,11 @@
+<div class="bg-slate-800/30 p-3 rounded-lg mb-2">
+    <div class="flex items-center justify-between text-sm">
+        <span class="font-medium text-amber-400">
+            {{ comment.user.get_full_name|default:comment.user.username }}
+        </span>
+        <span class="text-slate-500 text-xs">
+            {{ comment.created_at|date:"d/m/Y H:i" }}
+        </span>
+    </div>
+    <p class="text-slate-300 mt-1">{{ comment.content }}</p>
+</div>

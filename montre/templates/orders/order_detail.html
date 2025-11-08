@@ -1,0 +1,350 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12  order-details">
+    <div class="max-w-6xl mx-auto">
+        <!-- En-tête avec numéro de commande et statut -->
+        <div class="mt-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                <h1 class="text-2xl md:text-3xl font-playfair font-bold">Commande #{{ order.id }}</h1>
+                <div class="mt-2 md:mt-0
+                    {% if order.status == 'delivered' %}text-green-400
+                    {% elif order.status == 'shipped' %}text-blue-400
+                    {% elif order.status == 'cancelled' %}text-red-400
+                    {% else %}text-yellow-400{% endif %}">
+                    <span class="inline-flex items-center">
+                        {% if order.status == 'delivered' %}
+                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        {% elif order.status == 'shipped' %}
+                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6 0a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"></path>
+                            </svg>
+                        {% elif order.status == 'cancelled' %}
+                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        {% else %}
+                            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        {% endif %}
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            <p class="text-gray-400 text-sm mb-2">
+                Passée le {{ order.created_at|date:"d F Y à H:i" }}
+                {% if order.updated_at and order.updated_at != order.created_at %}
+                    <span class="mx-2">•</span>
+                    Dernière mise à jour: {{ order.updated_at|date:"d/m/Y H:i" }}
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <!-- Détails de la commande -->
+            <div class="md:col-span-2 space-y-8">
+                <!-- Produit commandé -->
+                <div class="bg-gray-900 rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-6">Détails de la commande</h2>
+                    
+                    <div class="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-6">
+                        <div class="w-full sm:w-40 h-40 flex-shrink-0">
+                            {% if order.product.images.first %}
+                                <img src="{{ order.product.images.first.image.url }}" 
+                                     alt="{{ order.product.name }}" 
+                                     class="w-full h-full object-cover rounded-lg">
+                            {% else %}
+                                <div class="w-full h-full bg-gray-800 rounded-lg flex items-center justify-center">
+                                    <svg class="w-12 h-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="flex-1 w-full">
+                            <div class="flex flex-col h-full">
+                                <div class="flex-1">
+                                    <h3 class="font-semibold text-lg">{{ order.product.name }}</h3>
+                                    <p class="text-sm text-gray-400 mt-1">Référence: {{ order.product.sku|default:'N/A' }}</p>
+                                    
+                                    {% if order.configuration_data %}
+                                    <div class="mt-3 p-3 bg-gray-800 rounded-lg">
+                                        <h4 class="text-sm font-medium text-gray-300 mb-2">Configuration personnalisée</h4>
+                                        <div class="grid grid-cols-2 gap-2 text-sm">
+                                            {% for key, value in order.configuration_data.items %}
+                                                <div class="text-gray-400">{{ key|title }}:</div>
+                                                <div class="text-gray-200">{{ value }}</div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mt-4 pt-4 border-t border-gray-800">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-400">Prix unitaire</span>
+                                        <span class="font-medium">{{ order.unit_price|floatformat:2 }} FCFA</span>
+                                    </div>
+                                    <div class="flex items-center justify-between mt-2">
+                                        <span class="text-gray-400">Quantité</span>
+                                        <span class="font-medium">{{ order.quantity }}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-gray-800">
+                                        <span class="text-lg font-semibold">Sous-total</span>
+                                        <span class="text-xl font-bold text-gold-500">{{ order.total_price|floatformat:2 }} FCFA</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Adresses -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Adresse de livraison -->
+                    <div class="bg-gray-900 rounded-lg p-6">
+                        <h3 class="font-semibold text-lg mb-4">Adresse de livraison</h3>
+                        <div class="text-gray-300">
+                            {{ order.shipping_address|linebreaksbr }}
+                        </div>
+                        {% if order.delivery_instructions %}
+                            <div class="mt-3 pt-3 border-t border-gray-800">
+                                <p class="text-sm text-gray-400 mb-1">Instructions de livraison</p>
+                                <p class="text-sm text-gray-300">{{ order.delivery_instructions }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if order.billing_address and order.billing_address != order.shipping_address %}
+                    <div class="bg-gray-900 rounded-lg p-6">
+                        <h3 class="font-semibold text-lg mb-4">Adresse de facturation</h3>
+                        <div class="text-gray-300">
+                            {{ order.billing_address|linebreaksbr }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Informations supplémentaires -->
+                <div class="bg-gray-900 rounded-lg p-6">
+                    <h3 class="font-semibold text-lg mb-4">Informations supplémentaires</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="text-gray-400 text-sm mb-1">Méthode de paiement</h4>
+                            <p class="text-gray-300">Paiement par carte bancaire</p>
+                        </div>
+                        {% if order.notes %}
+                        <div>
+                            <h4 class="text-gray-400 text-sm mb-1">Notes</h4>
+                            <p class="text-gray-300 whitespace-pre-line">{{ order.notes }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panneau latéral -->
+            <div class="space-y-6">
+                <!-- Récapitulatif de la commande -->
+                <div class="bg-gray-900 rounded-lg p-6">
+                    <h3 class="font-semibold text-lg mb-4">Récapitulatif</h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Sous-total</span>
+                            <span>{{ order.unit_price|floatformat:2 }} FCFA</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Livraison</span>
+                            <span class="text-green-500">Gratuite</span>
+                        </div>
+                        {% if order.discount_amount and order.discount_amount > 0 %}
+                        <div class="flex justify-between text-green-400">
+                            <span>Réduction</span>
+                            <span>-{{ order.discount_amount|floatformat:2 }} FCFA</span>
+                        </div>
+                        {% endif %}
+                        <div class="border-t border-gray-800 pt-3 mt-3">
+                            <div class="flex justify-between text-lg font-semibold">
+                                <span>Total TTC</span>
+                                <span class="text-gold-500">{{ order.total_price|floatformat:2 }} FCFA</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">TVA incluse</p>
+                        </div>
+                    </div>
+                    
+                    {% if order.status == 'pending' %}
+                        <div class="mt-6 pt-6 border-t border-gray-800">
+                            <p class="text-sm text-gray-400 mb-3">Paiement en attente de validation</p>
+                            <button class="w-full bg-gold-500 hover:bg-gold-600 text-gray-900 font-medium py-2 px-4 rounded-md transition duration-200">
+                                Payer maintenant
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Informations client -->
+                <div class="bg-gray-900 rounded-lg p-6">
+                    <h3 class="font-semibold text-lg mb-4">Informations client</h3>
+                    
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-gray-400 text-sm">Nom</p>
+                            <p class="font-medium text-gray-300">{{ order.get_customer_name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Email</p>
+                            <p class="font-medium text-gray-300">{{ order.lead.email|default:order.customer_email }}</p>
+                        </div>
+                        {% with phone=order.lead.phone|default:order.customer_phone %}
+                            {% if phone %}
+                            <div>
+                                <p class="text-gray-400 text-sm">Téléphone</p>
+                                <p class="font-medium text-gray-300">{{ phone }}</p>
+                            </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+                
+                <!-- Suivi de commande -->
+                <div class="bg-gray-900 rounded-lg p-6">
+                    <h3 class="font-semibold text-lg mb-4">Suivi de commande</h3>
+                    
+                    <div class="flow-root">
+                        <ul class="-mb-8">
+                            <li class="relative pb-8">
+                                <div class="relative flex items-start space-x-3">
+                                    <div>
+                                        <div class="relative px-1">
+                                            <div class="h-4 w-4 bg-gold-500 rounded-full ring-4 ring-gray-900"></div>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                        <div>
+                                            <p class="text-sm text-gray-300">Commande passée</p>
+                                            <p class="text-xs text-gray-500">
+                                                {{ order.created_at|date:"d/m/Y à H:i" }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            {% if order.status == 'processing' or order.status == 'shipped' or order.status == 'delivered' %}
+                            <li class="relative pb-8">
+                                <div class="relative flex items-start space-x-3">
+                                    <div>
+                                        <div class="relative px-1">
+                                            <div class="h-4 w-4 bg-gold-500 rounded-full ring-4 ring-gray-900"></div>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                        <div>
+                                            <p class="text-sm text-gray-300">Commande en préparation</p>
+                                            <p class="text-xs text-gray-500">
+                                                {{ order.updated_at|date:"d/m/Y à H:i" }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endif %}
+                            
+                            {% if order.status == 'shipped' or order.status == 'delivered' %}
+                            <li class="relative pb-8">
+                                <div class="relative flex items-start space-x-3">
+                                    <div>
+                                        <div class="relative px-1">
+                                            <div class="h-4 w-4 bg-gold-500 rounded-full ring-4 ring-gray-900"></div>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                        <div>
+                                            <p class="text-sm text-gray-300">Commande expédiée</p>
+                                            <p class="text-xs text-gray-500">
+                                                {{ order.shipped_at|default:order.updated_at|date:"d/m/Y à H:i" }}
+                                            </p>
+                                            {% if order.tracking_number %}
+                                            <p class="mt-1 text-xs">
+                                                <span class="text-gray-400">N° de suivi:</span>
+                                                <a href="#" class="text-blue-400 hover:underline">{{ order.tracking_number }}</a>
+                                            </p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endif %}
+                            
+                            {% if order.status == 'delivered' %}
+                            <li class="relative">
+                                <div class="relative flex items-start space-x-3">
+                                    <div>
+                                        <div class="relative px-1">
+                                            <div class="h-4 w-4 bg-gold-500 rounded-full ring-4 ring-gray-900"></div>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                        <div>
+                                            <p class="text-sm text-gray-300">Commande livrée</p>
+                                            <p class="text-xs text-gray-500">
+                                                {{ order.delivered_at|default:order.updated_at|date:"d/m/Y à H:i" }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            {% else %}
+                            <li class="relative">
+                                <div class="relative flex items-start space-x-3">
+                                    <div>
+                                        <div class="relative px-1">
+                                            <div class="h-4 w-4 bg-gray-700 border-2 border-gray-600 rounded-full ring-4 ring-gray-900"></div>
+                                        </div>
+                                    </div>
+                                    <div class="min-w-0 flex-1 pt-1.5">
+                                        <p class="text-sm text-gray-500">
+                                            {% if order.status == 'cancelled' %}
+                                                Commande annulée
+                                            {% else %}
+                                                En attente de livraison
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="space-y-3">
+                    {% if order.status == 'pending' or order.status == 'processing' %}
+                        <button class="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-md transition duration-200">
+                            Annuler la commande
+                        </button>
+                    {% endif %}
+                    
+                    <a href="#" 
+                       class="block w-full text-center bg-gray-900 hover:bg-gray-800 border border-gray-700 text-white font-medium py-2 px-4 rounded-md transition duration-200">
+                        Contacter le service client
+                    </a>
+                    
+                    <a href="#" 
+                       class="block w-full text-center text-gold-500 hover:text-gold-400 font-medium py-2 px-4 rounded-md transition duration-200">
+                        Voir le produit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

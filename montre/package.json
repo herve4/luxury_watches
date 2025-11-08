@@ -1,0 +1,23 @@
+{
+  "name": "luxury_watches",
+  "version": "1.0.0",
+  "description": "Luxury Watches E-commerce",
+  "scripts": {
+    "dev": "npx tailwindcss -i ./montre/static/src/css/input.css -o ./montre/static/css/output.css --watch",
+    "build": "npx tailwindcss -i ./montre/static/src/css/input.css -o ./montre/static/css/output.css --minify",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "django",
+    "tailwind",
+    "ecommerce"
+  ],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.4.1"
+  }
+}

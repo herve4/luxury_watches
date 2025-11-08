@@ -1,0 +1,155 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12">
+    <div class="max-w-6xl mx-auto">
+        <div class="mb-8">
+            <h1 class="text-3xl font-playfair font-bold mb-2">Mes commandes</h1>
+            <p class="text-gray-400">Consultez l'historique et le suivi de vos commandes</p>
+        </div>
+
+        {% if orders %}
+            <div class="bg-gray-900 rounded-lg overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-gray-800">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    Commande
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    Date
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    Produit
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    Total
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                                    Statut
+                                </th>
+                                <th scope="col" class="relative px-6 py-3">
+                                    <span class="sr-only">Actions</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-gray-900 divide-y divide-gray-700">
+                            {% for order in orders %}
+                            <tr class="hover:bg-gray-800 transition">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-white">
+                                        #{{ order.id }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-400">
+                                        {{ order.created_at|date:"d/m/Y" }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <img class="h-10 w-10 rounded-full object-cover" 
+                                                 src="{{ order.product.images.first.image.url }}" 
+                                                 alt="{{ order.product.name }}">
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-white">
+                                                {{ order.product.name }}
+                                            </div>
+                                            {% if order.configuration %}
+                                            <div class="text-xs text-gray-400">
+                                                Personnalisé
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-white">
+                                        {{ order.total_price }} FCFA
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if order.status == 'delivered' %}bg-green-900 text-green-300
+                                        {% elif order.status == 'shipped' %}bg-blue-900 text-blue-300
+                                        {% elif order.status == 'cancelled' %}bg-red-900 text-red-300
+                                        {% else %}bg-yellow-900 text-yellow-300{% endif %}">
+                                        {{ order.get_status_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <a href="{% url 'order_detail' order.id %}" class="text-gold-500 hover:text-gold-400">
+                                        Voir détails
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="mt-8 flex justify-center">
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" 
+                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-700 bg-gray-800 text-sm font-medium text-gray-300 hover:bg-gray-700">
+                            <span class="sr-only">Précédent</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    {% endif %}
+
+                    {% for i in paginator.page_range %}
+                        {% if page_obj.number == i %}
+                            <span class="relative inline-flex items-center px-4 py-2 border border-gold-500 bg-gold-500 text-black font-medium">
+                                {{ i }}
+                            </span>
+                        {% else %}
+                            <a href="?page={{ i }}" class="relative inline-flex items-center px-4 py-2 border border-gray-700 bg-gray-800 text-sm font-medium text-gray-300 hover:bg-gray-700">
+                                {{ i }}
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" 
+                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-700 bg-gray-800 text-sm font-medium text-gray-300 hover:bg-gray-700">
+                            <span class="sr-only">Suivant</span>
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    {% endif %}
+                </nav>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <h3 class="mt-2 text-lg font-medium text-white">Aucune commande</h3>
+                <p class="mt-1 text-sm text-gray-400">
+                    Vous n'avez pas encore passé de commande.
+                </p>
+                <div class="mt-6">
+                    <a href="{% url 'product_list' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-black bg-gold-500 hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500">
+                        <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        Découvrir nos produits
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

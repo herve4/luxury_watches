@@ -1,0 +1,429 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% block content %}
+<style>
+    .carousel-item {
+        transition: all 0.5s ease;
+    }
+    
+    .carousel-item.active {
+        transform: scale(1.05);
+        z-index: 10;
+    }
+    
+    .carousel-item:not(.active) {
+        opacity: 0.7;
+    }
+    
+    .carousel-container {
+        scroll-behavior: smooth;
+    }
+    
+    /* Animation pour l'indicateur actif */
+    .carousel-indicator.active {
+        background-color: #d4af37;
+        transform: scale(1.2);
+    }
+    
+    /* Cache la scrollbar */
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hero Section */
+    /* Animation d'entrée */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-fade-in {
+    animation: fadeInUp 1s ease-out forwards;
+}
+
+/* Style pour les boutons de prévisualisation dans l'admin */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: default;
+}
+
+/* Dégradé or */
+.gold-gradient {
+    background: linear-gradient(135deg, #FFD700 0%, #D4AF37 100%);
+}
+
+/* Style pour les vidéos en arrière-plan */
+.video-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+</style>
+<!-- Hero Section -->
+{%   if video_banner and video_banner.is_active %}
+{% include 'includes/video_banner.html' %}
+{% else %}
+<section class="relative h-screen flex items-center justify-center overflow-hidden">
+    <!-- Video Background -->
+    <video autoplay muted loop class="absolute z-0 w-auto min-w-full min-h-full max-w-none">
+        <source src="{% static 'videos/video.mp4' %}" type="video/mp4">
+    </video>
+    
+    <!-- Overlay -->
+    <div class="absolute inset-0 bg-black/70 z-10"></div>
+    
+    <!-- Content -->
+    <div class="relative z-20 text-center px-6 max-w-4xl mx-auto section-fade-in">
+        <h1 class="font-playfair text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            L'Art du Temps,<br>Réinventé
+        </h1>
+        <p class="text-xl md:text-2xl text-gray-300 mb-8 font-light">
+            Pièces exclusives, numérotées et certifiées
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button class="gold-gradient text-black px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl transition transform hover:scale-105">
+                Découvrir la Collection
+            </button>
+            <button class="border border-gold-500 text-gold-500 px-8 py-4 rounded-full font-semibold text-lg hover:bg-gold-500/10 transition">
+                Voir la Vidéo
+            </button>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+
+    <!-- Featured Products Carousel -->
+    <section class="py-16 bg-black">
+        <div class="container mx-auto px-4">
+            <h2 class="font-serif text-3xl md:text-4xl text-center mb-12 text-yellow-600">
+                Nos Modèles Exclusifs
+            </h2>
+            
+            <div class="carousel-container relative">
+                <!-- Carousel -->
+                <div id="featuredCarousel" class="carousel flex overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-8">
+                    <!-- Slides générées dynamiquement -->
+                    {% for product in featured_products %}
+                    <div class="carousel-item flex-shrink-0 w-full md:w-4/5 lg:w-3/4 snap-center px-2 {% if forloop.first %}active{% endif %}">
+                        <div class="bg-gray-900 rounded-xl overflow-hidden flex flex-col md:flex-row">
+                            <!-- Contenu produit -->
+                            <div class="md:w-1/2 p-6 md:p-8 flex flex-col justify-center">
+                                <h3 class="font-serif text-2xl md:text-3xl font-bold mb-4">{{ product.name|truncatechars:20 }}</h3>
+                                <p class="text-gray-300 mb-6">{{ product.description|truncatechars:200 }}</p>
+                                <div class="flex items-center gap-4 mb-6">
+                                    <span class="text-xl md:text-2xl font-bold text-yellow-600">{{ product.price }} FCFA</span>
+                                    <span class="text-gray-400 text-sm">Pièce unique numérotée</span>
+                                </div>
+                                <button class="bg-gradient-to-r from-yellow-500 to-yellow-700 text-black px-6 py-3 rounded-full font-semibold hover:shadow-2xl transition transform hover:scale-105 w-full md:w-auto"
+                                        hx-get="{% url 'voir_product' product.id %}"
+                                        hx-target="#configuration-modal"
+                                        hx-trigger="click"
+                                        onclick="document.getElementById('configuration-modal').classList.remove('hidden')">
+                                    Acheter
+                                </button>
+                            </div>
+                            
+                            <!-- Image produit -->
+                            <div class="md:w-1/2 flex items-center justify-center p-4">
+                                {% if product.main_image %}
+                                <div class="w-full h-64 md:h-80 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-700 rounded-lg overflow-hidden">
+                                    <img src="{{ product.main_image.image.url }}" 
+                                         class="max-h-full w-auto object-contain" 
+                                         alt="{{ product.main_image.alt_text|default:product.name }}">
+                                </div>
+                                {% else %}
+                                <div class="w-full h-64 md:h-80 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-700 rounded-lg">
+                                    <i class="fas fa-clock text-6xl text-yellow-600"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Indicators -->
+                <div class="flex justify-center mt-6 space-x-2">
+                    {% for product in featured_products %}
+                    <button class="carousel-indicator w-3 h-3 rounded-full bg-gray-600 transition-all duration-300 {% if forloop.first %}active{% endif %}" 
+                            data-index="{{ forloop.counter0 }}"></button>
+                    {% endfor %}
+                </div>
+                
+                <!-- Controls -->
+                <button id="prevButton" class="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/70 transition z-20">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="nextButton" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/70 transition z-20">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+<!-- Section Valeurs -->
+<section id="valeurs" class="py-20 bg-gray-900">
+    <div class="container mx-auto px-6">
+        <div class="grid md:grid-cols-3 gap-12 text-center section-fade-in">
+            <!-- Artisanat -->
+            <div class="space-y-4">
+                <div class="w-16 h-16 gold-gradient rounded-full flex items-center justify-center mx-auto">
+                    <span class="text-2xl">👑</span>
+                </div>
+                <h3 class="font-playfair text-2xl font-semibold">Artisanat d'Excellence</h3>
+                <p class="text-gray-400">Chaque pièce est assemblée à la main par nos maîtres horlogers</p>
+            </div>
+            
+            <!-- Certification -->
+            <div class="space-y-4">
+                <div class="w-16 h-16 gold-gradient rounded-full flex items-center justify-center mx-auto">
+                    <span class="text-2xl">⭐</span>
+                </div>
+                <h3 class="font-playfair text-2xl font-semibold">Certification</h3>
+                <p class="text-gray-400">Pièces numérotées avec certificat d'authenticité</p>
+            </div>
+            
+            <!-- Garantie -->
+            <div class="space-y-4">
+                <div class="w-16 h-16 gold-gradient rounded-full flex items-center justify-center mx-auto">
+                    <span class="text-2xl">🛡️</span>
+                </div>
+                <h3 class="font-playfair text-2xl font-semibold">Garantie 5 Ans</h3>
+                <p class="text-gray-400">Service après-vente exclusif et personnalisé</p>
+            </div>
+        </div>
+        
+        <!-- Chiffres clés -->
+        <div class="grid grid-cols-3 gap-8 mt-16 text-center section-fade-in">
+            <div>
+                <div class="font-playfair text-4xl font-bold text-gold-500 mb-2">98%</div>
+                <div class="text-gray-400">Satisfaction Client</div>
+            </div>
+            <div>
+                <div class="font-playfair text-4xl font-bold text-gold-500 mb-2">5</div>
+                <div class="text-gray-400">Ans de Garantie</div>
+            </div>
+            <div>
+                <div class="font-playfair text-4xl font-bold text-gold-500 mb-2">500</div>
+                <div class="text-gray-400">Pièces/An</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Galerie Produits -->
+<section id="collection" class="py-20 bg-black">
+    <div class="container mx-auto px-6">
+        <h2 class="font-playfair text-4xl md:text-5xl text-center mb-16 section-fade-in">
+            Notre Collection Exclusive
+        </h2>
+        
+        <div class="grid md:grid-cols-3 gap-8 section-fade-in">
+            {% for product in featured_products %}
+            <div class="group relative bg-gray-900 rounded-2xl overflow-hidden hover:transform hover:scale-105 transition duration-500">
+                <div class="overflow-hidden">
+                    {% if product.images.first %}
+<img src="{{ product.images.first.image.url }}" 
+     alt="{{ product.images.first.alt_text|default:product.name }}"
+     class="w-full h-80 object-cover group-hover:scale-110 transition duration-700">
+{% else %}
+<div class="w-full h-80 bg-gradient-to-br from-gray-800 to-gray-700 flex items-center justify-center">
+    <i class="fas fa-clock text-6xl text-yellow-600"></i>
+</div>
+{% endif %}
+                </div>
+                
+                <div class="p-6">
+                    <h3 class="font-playfair text-2xl font-semibold mb-2">{{ product.name }}</h3>
+                    <p class="text-gray-400 mb-4">{{ product.description|truncatechars:100 }}</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gold-500 font-semibold text-xl">{{ product.price }} FCFA</span>
+                        <button class="border border-gold-500 text-gold-500 px-6 py-2 rounded-full hover:bg-gold-500 hover:text-black transition"
+                                hx-get="{% url 'voir_product' product.id %}"
+                                hx-target="#configuration-modal"
+                                hx-trigger="click"
+                                onclick="document.getElementById('configuration-modal').classList.remove('hidden')">
+                            Acheter
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Section Configuration -->
+<section class="py-20 bg-gray-900">
+    {% include 'galeries.html' %}
+</section>
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const carousel = document.getElementById('featuredCarousel');
+        const items = document.querySelectorAll('.carousel-item');
+        const indicators = document.querySelectorAll('.carousel-indicator');
+        const prevButton = document.getElementById('prevButton');
+        const nextButton = document.getElementById('nextButton');
+        
+        let currentIndex = 0;
+        let itemWidth = items[0] ? items[0].offsetWidth : 0;
+        const totalItems = items.length;
+        
+        // Initialisation
+        if (totalItems > 0) {
+            updateCarousel();
+        }
+        
+        // Fonction pour mettre à jour le carrousel
+        function updateCarousel() {
+            if (totalItems === 0) return;
+            
+            // Défilement
+            const scrollPosition = currentIndex * (itemWidth + 16); // 16px pour l'espacement
+            carousel.scrollTo({
+                left: scrollPosition,
+                behavior: 'smooth'
+            });
+            
+            // Mise à jour des classes actives
+            items.forEach((item, index) => {
+                if (index === currentIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            // Mise à jour des indicateurs
+            indicators.forEach((indicator, index) => {
+                if (index === currentIndex) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active');
+                }
+            });
+        }
+        
+        // Événement pour le bouton suivant
+        nextButton.addEventListener('click', function() {
+            if (totalItems === 0) return;
+            currentIndex = (currentIndex + 1) % totalItems;
+            updateCarousel();
+        });
+        
+        // Événement pour le bouton précédent
+        prevButton.addEventListener('click', function() {
+            if (totalItems === 0) return;
+            currentIndex = (currentIndex - 1 + totalItems) % totalItems;
+            updateCarousel();
+        });
+        
+        // Événement pour les indicateurs
+        indicators.forEach((indicator) => {
+            indicator.addEventListener('click', function() {
+                if (totalItems === 0) return;
+                const index = parseInt(this.getAttribute('data-index'));
+                currentIndex = index;
+                updateCarousel();
+            });
+        });
+        
+        // Détection du défilement pour réinitialiser l'effet
+        carousel.addEventListener('scroll', function() {
+            if (totalItems === 0) return;
+            
+            // Réinitialiser tous les éléments
+            items.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Calculer l'élément actif basé sur le défilement
+            const scrollPosition = carousel.scrollLeft;
+            const activeIndex = Math.round(scrollPosition / (itemWidth + 16));
+            
+            // Appliquer la classe active à l'élément actuel
+            if (activeIndex >= 0 && activeIndex < totalItems) {
+                items[activeIndex].classList.add('active');
+                currentIndex = activeIndex;
+                
+                // Mise à jour des indicateurs
+                indicators.forEach((indicator, index) => {
+                    if (index === activeIndex) {
+                        indicator.classList.add('active');
+                    } else {
+                        indicator.classList.remove('active');
+                    }
+                });
+            }
+        });
+        
+        // Détection du redimensionnement de la fenêtre
+        window.addEventListener('resize', function() {
+            if (items[0]) {
+                // Recalculer la largeur des éléments
+                const newItemWidth = items[0].offsetWidth;
+                if (newItemWidth !== itemWidth) {
+                    itemWidth = newItemWidth;
+                    // Mettre à jour le défilement
+                    updateCarousel();
+                }
+            }
+        });
+
+        // Auto-défilement toutes les 5 secondes
+        let autoScrollInterval;
+        
+        function startAutoScroll() {
+            autoScrollInterval = setInterval(() => {
+                if (totalItems > 0) {
+                    currentIndex = (currentIndex + 1) % totalItems;
+                    updateCarousel();
+                }
+            }, 5000);
+        }
+        function stopAutoScroll() {
+            clearInterval(autoScrollInterval);
+        }
+        
+        // Démarrer l'auto-défilement
+        startAutoScroll();
+        
+        // Arrêter l'auto-défilement quand l'utilisateur interagit
+        carousel.addEventListener('mouseenter', stopAutoScroll);
+        carousel.addEventListener('mouseleave', startAutoScroll);
+        
+        // Mettre à jour l'état initial
+        updateCarousel();
+    });
+</script>
+
+<!-- Include Order Modal -->
+{% include 'components/order_modal.html' %}
+
+{% endblock %}
