@@ -157,8 +157,8 @@
         
         <a href="{% url 'order_detail' order.id %}" class="product-link">
             <div class="product">
-                {% if order.product.images.first %}
-                    <img src="{{ order.product.images.first.image.url }}" 
+                {% if image %}
+                    <img src="{{ image.url }}" 
                         alt="{{ order.product.name }}" 
                         class="product-image">
                 {% else %}

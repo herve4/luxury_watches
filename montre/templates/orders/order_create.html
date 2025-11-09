@@ -6,7 +6,7 @@
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-6xl mx-auto">
         <!-- Étapes de la commande -->
-        <div class="mb-8">
+        {% comment %} <div class="mb-8">
             <div class="flex items-center justify-between max-w-2xl mx-auto">
                 <div class="flex flex-col items-center">
                     <div class="w-10 h-10 rounded-full bg-gold-500 text-gray-900 flex items-center justify-center font-bold mb-1">1</div>
@@ -24,8 +24,8 @@
                 </div>
             </div>
         </div>
-        
-        <div class="bg-gray-900 rounded-lg shadow-xl overflow-hidden">
+         {% endcomment %}
+        <div class="bg-gray-900 rounded-lg shadow-xl overflow-hidden py-5">
             <div class="md:flex">
                 <!-- Détails de la commande -->
                 <div class="md:w-1/2 p-6 border-b md:border-b-0 md:border-r border-gray-700">
@@ -274,7 +274,7 @@
         
         <!-- Bouton de soumission -->
         <div class="mt-6">
-            <button type="submit" class="w-full bg-gold-500 hover:bg-gold-600 text-black font-semibold py-3 px-6 rounded-lg transition duration-300">
+            <button type="submit" class="w-full  text-white font-semibold py-3 px-6" style="background-color: #FF6B00; border-radius: 10px; border: none; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                 Confirmer la commande
             </button>
             <p class="text-xs text-gray-400 mt-2 text-center">
@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 
-{% endblock %}
+{% endblock content %}
 
 {% block extra_js %}
 {{ block.super }}

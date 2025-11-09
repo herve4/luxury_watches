@@ -235,6 +235,7 @@ class OrderCreateView(CreateView):
             context = {
                 'order': order,
                 'product': order.product,
+                'image': order.product.images.image.first(),
                 'site_name': getattr(settings, "SITE_NAME", "Notre Boutique"),
                 'first_name': self.first_name,
                 'last_name': self.last_name,
@@ -242,6 +243,7 @@ class OrderCreateView(CreateView):
                 'domain': self.request.get_host(),
                 'site_url': settings.SITE_URL,
             }
+            print(context['image'])
             
             # Email HTML
             html_message = render_to_string('emails/order_confirmation.html', context)
