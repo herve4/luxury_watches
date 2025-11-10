@@ -1,9 +1,10 @@
 from django.urls import path
-from .views import capture_lead, landing_page, product_detail, add_review, add_comment, voir_product
+from .views import capture_lead, landing_page, product_detail_page, add_review, add_comment, voir_product
 from .views_orders import OrderCreateView, OrderDetailView, OrderListView, OrderSuccessView
 from .views_products import ProductListView
 from django.conf import settings
 from django.conf.urls.static import static
+from .views_products import product_detail
 
 urlpatterns = [
     # Pages principales
@@ -17,7 +18,7 @@ urlpatterns = [
          ProductListView.as_view(), name='product_list_by_category'),
     path('boutique/categorie/<slug:category_slug>/<slug:subcategory_slug>/', 
          ProductListView.as_view(), name='product_list_by_subcategory'),
-    path('produit/<slug:slug>/', product_detail, name='product_detail'),
+    path('produit/<slug:slug>/', product_detail_page, name='product_detail'),
     
     # Panier et commandes
     path('panier/', landing_page, name='cart'),  # À implémenter

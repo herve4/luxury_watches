@@ -259,7 +259,15 @@
                     <h3 class="ml-2 text-sm font-medium text-gray-900">{{ review.title }}</h3>
                 </div>
                 <p class="text-sm text-gray-500 mb-2">
-                    Par <span class="font-medium text-gray-900">{{ review.user.get_full_name|default:review.user.username }}</span>
+                    Par <span class="font-medium text-gray-900">
+                        {% if review.first_name or review.last_name %}
+                            {{ review.first_name|default:'' }} {{ review.last_name|default:'' }}
+                        {% elif review.user %}
+                            {{ review.user.get_full_name|default:'Visiteur' }}
+                        {% else %}
+                            Visiteur
+                        {% endif %}
+                    </span>
                     le <time datetime="{{ review.created_at|date:'Y-m-d' }}">{{ review.created_at|date:"d F Y" }}</time>
                 </p>
                 <p class="text-gray-700">{{ review.comment }}</p>

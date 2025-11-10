@@ -1,0 +1,500 @@
+<!-- Modal amélioré pour le formulaire d'avis -->
+<div id="review-drawer" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Overlay avec animation -->
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out" id="review-overlay" aria-hidden="true"></div>
+    
+    <!-- Contenu du modal avec animation -->
+    <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Espace pour centrer le contenu -->
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        
+        <!-- Carte du modal -->
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full relative">
+            <!-- Bouton de fermeture -->
+            <button type="button" 
+                    onclick="closeReviewModal()"
+                    class="absolute top-4 right-4 z-10 p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                <span class="sr-only">Fermer</span>
+            </button>
+            
+            <!-- En-tête avec dégradé -->
+            <div class="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-5 sm:px-8 sm:pt-6 sm:pb-5 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-white" id="modal-title">
+                        Partagez votre expérience
+                    </h3>
+                </div>
+                <p class="mt-1 text-sm text-amber-100">
+                    Votre avis compte pour nous et nos futurs clients
+                </p>
+            </div>
+            
+            <!-- Corps du formulaire -->
+            <div class="p-6">
+                <p class="text-gray-600 mb-6">Partagez votre expérience avec ce produit</p>
+                
+                <!-- Message de statut -->
+                <div id="form-message" class="hidden mb-6 p-4 rounded-lg"></div>
+                
+                <form method="post" action="{% url 'add_review' product_slug=product.slug %}" class="space-y-6" id="review-form">
+                    {% csrf_token %}
+                    
+                    <!-- Champs cachés pour les utilisateurs connectés -->
+                    {% if user.is_authenticated %}
+                        <input type="hidden" name="first_name" value="{{ user.first_name }}">
+                        <input type="hidden" name="last_name" value="{{ user.last_name }}">
+                        <input type="hidden" name="email" value="{{ user.email }}">
+                    {% else %}
+                        <!-- Champs pour les utilisateurs non connectés -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="space-y-1">
+                                <label for="first_name" class="block text-sm font-medium text-gray-700">Prénom *</label>
+                                <input type="text" 
+                                       name="first_name" 
+                                       id="first_name" 
+                                       required
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
+                                       placeholder="Votre prénom">
+                            </div>
+                            <div class="space-y-1">
+                                <label for="last_name" class="block text-sm font-medium text-gray-700">Nom *</label>
+                                <input type="text" 
+                                       name="last_name" 
+                                       id="last_name" 
+                                       required
+                                       class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
+                                       placeholder="Votre nom">
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Champ Titre -->
+                    <div class="space-y-2">
+                        <label for="title" class="block text-sm font-medium text-gray-700">
+                            Titre de votre avis *
+                        </label>
+                        <div class="mt-1">
+                            <input type="text" 
+                                   name="title" 
+                                   id="title" 
+                                   required
+                                   minlength="5"
+                                   maxlength="100"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
+                                   placeholder="Donnez un titre à votre avis">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">
+                            Exemple : "Excellent rapport qualité-prix"
+                        </p>
+                    </div>
+                    
+                    <!-- Note -->
+                    <div class="space-y-3">
+                        <label class="block text-sm font-medium text-gray-700">
+                            Votre note *
+                        </label>
+                        <div class="flex items-center">
+                            <div class="flex space-x-1" id="rating-stars">
+                                {% for i in "12345"|make_list %}
+                                <button type="button" 
+                                        onclick="setRating({{ i }})" 
+                                        class="rating-star p-1 focus:outline-none transform hover:scale-110 transition-transform duration-200" 
+                                        data-rating="{{ i }}">
+                                    <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                                    </svg>
+                                </button>
+                                {% endfor %}
+                            </div>
+                            <input type="hidden" name="rating" id="rating" value="5" required>
+                            <span class="ml-3 text-sm font-medium text-amber-600" id="rating-text">Excellent</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Commentaire -->
+                    <div class="space-y-2">
+                        <label for="comment" class="block text-sm font-medium text-gray-700">
+                            Votre avis *
+                        </label>
+                        <div class="mt-1 relative rounded-lg shadow-sm">
+                            <textarea name="comment" 
+                                    id="comment" 
+                                    rows="4" 
+                                    required
+                                    class="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition duration-200"
+                                    placeholder="Décrivez votre expérience avec ce produit (qualité, confort, rapport qualité/prix...)"></textarea>
+                            <div class="mt-1 text-xs text-gray-500 text-right">
+                                <span id="char-count">0</span> caractères (minimum 20)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Conseils pour un bon avis -->
+                    <div class=" border-l-4 border-amber-400 p-4 rounded-r-lg" style="background-color: #f6f5e3ff;">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-amber-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h2a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm" style="color: #dbbb06ff;">
+                                    Votre avis sera publié sous votre nom. Soyez honnête et précis pour aider les autres clients à faire leur choix.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Boutons d'action -->
+                    <div class="flex justify-end space-x-3 pt-2">
+                        <button type="button" 
+                                onclick="closeReviewModal()"
+                                class="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-all duration-200 transform hover:-translate-y-0.5">
+                            Annuler
+                        </button>
+                        <button type="submit" 
+                                id="submit-review"
+                                class="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-amber-500 to-amber-600 rounded-lg hover:from-amber-600 hover:to-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Publier mon avis
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Gestion sécurisée de l'API de messagerie
+const safeMessageApi = {
+    sendMessage: async (message, callback) => {
+        try {
+            // Vérifier si l'API de messagerie est disponible
+            if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+                chrome.runtime.sendMessage(message, (response) => {
+                    // Vérifier la dernière erreur de Chrome
+                    if (chrome.runtime.lastError) {
+                        console.warn('Erreur de messagerie:', chrome.runtime.lastError);
+                        if (callback) callback(null, chrome.runtime.lastError);
+                        return;
+                    }
+                    if (callback) callback(response);
+                });
+            } else {
+                // Fallback pour les environnements sans API chrome
+                console.log('Message simulé (hors extension):', message);
+                if (callback) callback({ success: true });
+            }
+        } catch (error) {
+            console.warn('Erreur dans safeMessageApi:', error);
+            if (callback) callback(null, error);
+        }
+    }
+};
+
+// État global pour le suivi de la notation
+let currentRating = 5;
+const ratingTexts = {
+    1: 'Mauvais',
+    2: 'Moyen',
+    3: 'Bien',
+    4: 'Très bien',
+    5: 'Excellent'
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialisation des étoiles
+    updateRatingDisplay(5);
+    
+    // Compteur de caractères
+    const commentField = document.getElementById('comment');
+    const charCount = document.getElementById('char-count');
+    
+    if (commentField && charCount) {
+        commentField.addEventListener('input', function() {
+            const length = this.value.length;
+            charCount.textContent = length;
+            
+            // Validation visuelle
+            if (length < 20) {
+                this.classList.add('border-red-300');
+                this.classList.remove('border-green-300');
+            } else {
+                this.classList.remove('border-red-300');
+                this.classList.add('border-green-300');
+            }
+        });
+    }
+    
+    // Gestion de la soumission du formulaire
+    const form = document.getElementById('review-form');
+    if (form) {
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitBtn = document.querySelector('#review-form button[type="submit"]');
+            
+            // Validation côté client
+            const comment = document.getElementById('comment').value;
+            if (comment.length < 20) {
+                showMessage('Veuillez écrire un commentaire d\'au moins 20 caractères.', 'error');
+                return false;
+            }
+            
+            // Afficher l'indicateur de chargement
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Publication en cours...
+                `;
+            }
+            
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Ajouter le nouvel avis à la liste
+                    const reviewsList = document.getElementById('reviews-list');
+                    if (reviewsList) {
+                        // Créer un élément temporaire pour parser le HTML
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = data.review_html.trim();
+                        
+                        // Ajouter le nouvel avis en haut de la liste
+                        const reviewElement = tempDiv.firstChild;
+                        reviewsList.insertBefore(reviewElement, reviewsList.firstChild);
+                        
+                        // Mettre à jour le compteur d'avis
+                        updateReviewsCount(1);
+                        
+                        // Fermer la modale
+                        closeReviewModal();
+                        
+                        // Afficher un message de succès
+                        showMessage('Votre avis a été publié avec succès !', 'success');
+                        
+                        // Réinitialiser le formulaire
+                        form.reset();
+                        setRating(5); // Réinitialiser la note à 5 étoiles
+                    }
+                } else {
+                    // Afficher les erreurs de validation
+                    let errorMessage = 'Une erreur est survenue lors de la publication de votre avis.';
+                    if (data.errors) {
+                        errorMessage = Object.values(data.errors).flat().join('\n');
+                    }
+                    showMessage(errorMessage, 'error');
+                }
+            } catch (error) {
+                console.error('Erreur lors de la soumission du formulaire:', error);
+                showMessage('Une erreur est survenue lors de la communication avec le serveur.', 'error');
+            } finally {
+                // Réactiver le bouton de soumission
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        Publier mon avis
+                    `;
+                }
+            }
+        });
+    }
+});
+
+// Fonction pour définir la note
+function setRating(rating) {
+    currentRating = parseInt(rating);
+    const ratingInput = document.getElementById('rating');
+    if (ratingInput) {
+        ratingInput.value = currentRating;
+    }
+    updateRatingDisplay();
+}
+
+// Fonction pour mettre à jour l'affichage des étoiles
+function updateRatingDisplay() {
+    const stars = document.querySelectorAll('.rating-star');
+    const ratingText = document.getElementById('rating-text');
+    
+    // Mettre à jour le texte de la note
+    if (ratingText) {
+        ratingText.textContent = ratingTexts[currentRating] || '';
+    }
+    
+    // Mettre à jour les étoiles
+    stars.forEach((star) => {
+        const starValue = parseInt(star.getAttribute('data-rating'));
+        const starIcon = star.querySelector('svg');
+        
+        if (starIcon) {
+            // Réinitialiser les classes
+            starIcon.classList.remove('text-gray-300', 'text-amber-500', 'fill-amber-500');
+            
+            // Appliquer la classe appropriée
+            if (starValue <= currentRating) {
+                starIcon.classList.add('text-amber-500', 'fill-amber-500');
+            } else {
+                starIcon.classList.add('text-gray-300');
+            }
+        }
+    });
+}
+
+// Fonction pour mettre à jour le compteur d'avis
+function updateReviewsCount(change) {
+    const countElement = document.getElementById('reviews-count');
+    if (countElement) {
+        const currentCount = parseInt(countElement.textContent) || 0;
+        const newCount = currentCount + change;
+        countElement.textContent = newCount;
+        
+        // Mettre à jour le texte "Aucun avis" si nécessaire
+        const noReviewsText = document.querySelector('#reviews-list .no-reviews');
+        if (noReviewsText && newCount > 0) {
+            noReviewsText.remove();
+        }
+    }
+}
+
+// Fonction pour afficher les messages
+function showMessage(message, type = 'success') {
+    const messageDiv = document.getElementById('form-message');
+    if (!messageDiv) return;
+    
+    messageDiv.className = `p-4 rounded-lg mb-6 ${
+        type === 'error' 
+            ? 'bg-red-50 text-red-700 border-l-4 border-red-500' 
+            : 'bg-green-50 text-green-700 border-l-4 border-green-500'
+    }`;
+    
+    messageDiv.innerHTML = `
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 ${type === 'error' ? 'text-red-500' : 'text-green-500'}" 
+                     xmlns="http://www.w3.org/2000/svg" 
+                     viewBox="0 0 20 20" 
+                     fill="currentColor">
+                    <path fill-rule="evenodd" 
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" 
+                          clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm">${message}</p>
+            </div>
+        </div>
+    `;
+    
+    messageDiv.classList.remove('hidden');
+    
+    // Faire défiler jusqu'au message
+    messageDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// Configuration du survol et de la sélection des étoiles
+function setupStarHover() {
+    const stars = document.querySelectorAll('.rating-star');
+    
+    stars.forEach(star => {
+        // Gestion du survol
+        star.addEventListener('mouseenter', function() {
+            const hoverRating = parseInt(this.getAttribute('data-rating'));
+            highlightStars(hoverRating);
+        });
+        
+        // Gestion du clic
+        star.addEventListener('click', function(e) {
+            e.preventDefault();
+            const rating = parseInt(this.getAttribute('data-rating'));
+            setRating(rating);
+        });
+    });
+    
+    // Réinitialiser à la note sélectionnée quand on quitte la zone
+    const ratingContainer = document.getElementById('rating-stars');
+    if (ratingContainer) {
+        ratingContainer.addEventListener('mouseleave', function() {
+            updateRatingDisplay();
+        });
+    }
+}
+
+// Fonction pour mettre en surbrillance les étoiles au survol
+function highlightStars(rating) {
+    const stars = document.querySelectorAll('.rating-star');
+    
+    stars.forEach(star => {
+        const starValue = parseInt(star.getAttribute('data-rating'));
+        const starIcon = star.querySelector('svg');
+        
+        if (starIcon) {
+            starIcon.classList.remove('text-gray-300', 'text-amber-500', 'fill-amber-500');
+            
+            if (starValue <= rating) {
+                starIcon.classList.add('text-amber-500', 'fill-amber-500');
+            } else {
+                starIcon.classList.add('text-gray-300');
+            }
+        }
+    });
+}
+
+// Configuration des étoiles au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialisation des étoiles
+    initializeRatingStars();
+    
+    // Configuration du survol des étoiles
+    setupStarHover();
+    
+    // Initialisation de l'affichage
+    updateRatingDisplay(currentRating);
+    
+    // Mise à jour du texte de la note
+    const ratingText = document.getElementById('rating-text');
+    if (ratingText) {
+        ratingText.textContent = ratingTexts[currentRating] || '';
+    }
+});
+
+// Initialisation des étoiles
+function initializeRatingStars() {
+    const stars = document.querySelectorAll('.rating-star');
+    
+    stars.forEach(star => {
+        // Ajout d'un ID unique pour chaque étoile pour le débogage
+        const starValue = star.getAttribute('data-rating');
+        star.setAttribute('id', `star-${starValue}`);
+        
+        // Gestion du clic
+        star.addEventListener('click', function(e) {
+            e.preventDefault();
+            const rating = parseInt(this.getAttribute('data-rating'));
+            setRating(rating);
+        });
+    });
+}
+</script>

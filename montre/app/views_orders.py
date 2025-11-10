@@ -235,15 +235,15 @@ class OrderCreateView(CreateView):
             context = {
                 'order': order,
                 'product': order.product,
-                'image': order.product.images.image.first(),
+                'image': order.product.images.first(),  # Première image du produit
                 'site_name': getattr(settings, "SITE_NAME", "Notre Boutique"),
-                'first_name': self.first_name,
-                'last_name': self.last_name,
+                'first_name': order.customer_first_name or (order.lead.first_name if order.lead else ''),
+                'last_name': order.customer_last_name or (order.lead.last_name if order.lead else ''),
                 'protocol': 'https' if self.request.is_secure() else 'http',
                 'domain': self.request.get_host(),
                 'site_url': settings.SITE_URL,
             }
-            print(context['image'])
+            print(order.product.images.first())
             
             # Email HTML
             html_message = render_to_string('emails/order_confirmation.html', context)

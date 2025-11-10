@@ -30,31 +30,67 @@ class GoogleSheetsService:
     def _connect(self):
         """Établit la connexion avec Google Sheets"""
         try:
+            logger.info(f"Tentative de connexion à Google Sheets...")
+            logger.info(f"Chemin du fichier de credentials: {self.creds_path}")
+            logger.info(f"ID de la feuille: {self.spreadsheet_id}")
+            logger.info(f"Nom de l'onglet: {self.sheet_name}")
+            
             if not os.path.exists(self.creds_path):
-                raise FileNotFoundError(f"Fichier credentials introuvable: {self.creds_path}")
+                error_msg = f"Fichier credentials introuvable: {self.creds_path}"
+                logger.error(error_msg)
+                raise FileNotFoundError(error_msg)
+            
+            # Vérifier que l'ID de la feuille est défini
+            if not self.spreadsheet_id:
+                error_msg = "L'ID de la feuille Google Sheets n'est pas défini"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
             
             # Définir les scopes nécessaires
             scope = [
                 'https://spreadsheets.google.com/feeds',
-                'https://www.googleapis.com/auth/drive'
+                'https://www.googleapis.com/auth/drive',
+                'https://www.googleapis.com/auth/spreadsheets'
             ]
             
+            logger.info("Authentification avec le compte de service...")
+            
             # S'authentifier
-            creds = ServiceAccountCredentials.from_json_keyfile_name(self.creds_path, scope)
-            client = gspread.authorize(creds)
+            try:
+                creds = ServiceAccountCredentials.from_json_keyfile_name(self.creds_path, scope)
+                client = gspread.authorize(creds)
+                logger.info("Authentification réussie")
+            except Exception as auth_error:
+                logger.error(f"Erreur d'authentification: {str(auth_error)}")
+                raise
             
             # Ouvrir la feuille de calcul
-            if self.spreadsheet_id:
+            logger.info(f"Ouverture de la feuille avec l'ID: {self.spreadsheet_id}")
+            try:
                 spreadsheet = client.open_by_key(self.spreadsheet_id)
-            else:
-                spreadsheet = client.open(self.sheet_name)
+                logger.info("Feuille de calcul ouverte avec succès")
                 
-            self.sheet = spreadsheet.worksheet(self.sheet_name)
-            
-            logger.info(f"✅ Connecté à Google Sheets - ID: {self.spreadsheet_id}, Feuille: {self.sheet_name}")
+                # Obtenir l'onglet
+                try:
+                    self.sheet = spreadsheet.worksheet(self.sheet_name)
+                    logger.info(f"Onglet '{self.sheet_name}' chargé avec succès")
+                except gspread.exceptions.WorksheetNotFound:
+                    logger.warning(f"L'onglet '{self.sheet_name}' n'existe pas, tentative de création...")
+                    self.sheet = spreadsheet.add_worksheet(title=self.sheet_name, rows=100, cols=20)
+                    logger.info(f"Nouvel onglet créé: {self.sheet_name}")
+                
+                logger.info(f"✅ Connecté à Google Sheets - ID: {self.spreadsheet_id}, Feuille: {self.sheet_name}")
+                
+            except gspread.exceptions.SpreadsheetNotFound:
+                error_msg = f"La feuille avec l'ID {self.spreadsheet_id} n'a pas été trouvée ou l'accès est refusé"
+                logger.error(error_msg)
+                raise Exception(error_msg)
+            except Exception as e:
+                logger.error(f"Erreur lors de l'ouverture de la feuille: {str(e)}")
+                raise
             
         except Exception as e:
-            logger.error(f"❌ Erreur de connexion à Google Sheets: {e}")
+            logger.error(f"❌ Erreur de connexion à Google Sheets: {str(e)}", exc_info=True)
             raise
         
     
@@ -136,11 +172,37 @@ class GoogleSheetsService:
                         f'=IMAGE("{image_url}")'  # Formule Google Sheets pour afficher l'image
                     )
                     
-                    # Ajuster la hauteur de la ligne pour l'image
-                    self.sheet.row_dimensions[last_row].height = 100
+                    # Ajuster la hauteur de la ligne pour l'image (formatage conditionnel)
+                    self.sheet.format(f'I{last_row}', {
+                        'borders': {
+                            'top': {'style': 'SOLID'},
+                            'bottom': {'style': 'SOLID'},
+                            'left': {'style': 'SOLID'},
+                            'right': {'style': 'SOLID'}
+                        },
+                        'verticalAlignment': 'MIDDLE',
+                        'horizontalAlignment': 'CENTER'
+                    })
                     
-                    # Ajuster la largeur de la colonne
-                    self.sheet.column_dimensions['I'].width = 100
+                    # Ajuster la largeur de la colonne (en utilisant la méthode update de l'API v4)
+                    spreadsheet = self.sheet.spreadsheet
+                    body = {
+                        'requests': [{
+                            'updateDimensionProperties': {
+                                'range': {
+                                    'sheetId': self.sheet.id,
+                                    'dimension': 'COLUMNS',
+                                    'startIndex': 8,  # Colonne I (index 8 en base 0)
+                                    'endIndex': 9     # Jusqu'à la colonne suivante
+                                },
+                                'properties': {
+                                    'pixelSize': 100
+                                },
+                                'fields': 'pixelSize'
+                            }
+                        }]
+                    }
+                    spreadsheet.batch_update(body)
                     
                 except Exception as img_error:
                     logger.error(f"❌ Erreur lors de l'ajout de l'image: {img_error}")

@@ -1,18 +1,35 @@
 import json
 import logging
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse, HttpResponseRedirect
-from django.views.decorators.http import require_http_methods, require_POST
-from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, FormView
+from django.urls import reverse_lazy, reverse
 from django.contrib import messages
-from django.urls import reverse
-
-from rest_framework import generics
-from rest_framework.decorators import api_view, permission_classes
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse, HttpResponseRedirect, Http404, HttpResponseForbidden
+from django.views.decorators.http import require_http_methods, require_POST
+from django.db import models
+from django.db.models import Q, Count, Prefetch, Avg
+from django.core.mail import send_mail, BadHeaderError
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.base import View
+from django.views.generic.detail import SingleObjectMixin
+from django.views.generic.edit import FormMixin
+from django.contrib.auth import get_user_model
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.utils import timezone
+from django.db import transaction
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.mixins import UserPassesTestMixin
+from rest_framework import viewsets, status, generics, permissions, filters
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
-
+from django.utils.translation import gettext_lazy as _
 from .models import Product, ProductImage, Review, Comment
 from .forms import ReviewForm, CommentForm
 from .serializers import ProductSerializer, ProductDetailSerializer
@@ -70,42 +87,72 @@ def get_watch_image_url(product):
         return product.images.first().image.url
     return ''
 
-def product_detail(request, slug):
-    """Détail d'un produit avec ses avis"""
-    product = get_object_or_404(Product, slug=slug)
-   
-    
-    if product.in_stock <= 0:
-        messages.error(request, "Ce produit est actuellement en rupture de stock.")
-        return redirect('index')
-    
-    # Calculer la note moyenne
-    reviews = product.reviews.filter(active=True)
-    review_count = reviews.count()
-    
-    # Initialiser le formulaire d'avis
-    if request.method == 'POST':
-        review_form = ReviewForm(data=request.POST)
-        if review_form.is_valid():
-            # Créer l'avis mais ne pas encore l'enregistrer
-            new_review = review_form.save(commit=False)
-            # Assigner le produit à l'avis
-            new_review.product = product
-            # Enregistrer l'avis
-            new_review.save()
-            messages.success(request, 'Votre avis a été ajouté avec succès.')
-            return redirect('product_detail', slug=product.slug)
-    else:
-        review_form = ReviewForm()
-    
-    context = {
-        'product': product,
-        'reviews': reviews,
-        'review_count': review_count,
-        'review_form': review_form,
-    }
-    
-    return render(request, 'products/detail.html', context)
+def product_detail_page(request, slug):
+    """Vue pour afficher les détails d'un produit et gérer les avis"""
+    try:
+        product = get_object_or_404(Product, slug=slug, is_active=True)
+        
+        # Récupérer les images du produit
+        images = product.images.all()
+        
+        # Récupérer les produits associés (limité à 4)
+        related_products = product.related_products.filter(is_active=True)[:4]
+        
+        # Si pas assez de produits associés, compléter avec des produits de la même catégorie
+        if related_products.count() < 4 and product.category:
+            related_from_category = product.category.products.filter(
+                is_active=True
+            ).exclude(id=product.id).distinct()
+            
+            # Éviter les doublons
+            existing_ids = [p.id for p in related_products]
+            related_from_category = related_from_category.exclude(id__in=existing_ids)
+            
+            # Ajouter jusqu'à avoir 4 produits au total
+            related_products = list(related_products) + list(related_from_category[:4 - related_products.count()])
+        
+        # Gestion du formulaire d'avis
+        if request.method == 'POST':
+            form = ReviewForm(request.POST, user=request.user)
+            if form.is_valid():
+                review = form.save(commit=False)
+                review.product = product
+                if request.user.is_authenticated:
+                    review.user = request.user
+                review.is_approved = False  # Les avis nécessitent une modération
+                review.save()
+                messages.success(request, _("Merci pour votre avis ! Il sera publié après modération."))
+                return redirect('product_detail', slug=product.slug)
+        else:
+            form = ReviewForm(user=request.user)
+        
+        # Récupérer les avis approuvés
+        reviews = product.reviews.filter(is_approved=True).order_by('-created_at')
+        
+        # Calculer la note moyenne
+        avg_rating = reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
+        
+        context = {
+            'product': product,
+            'images': images,
+            'related_products': related_products,
+            'reviews': reviews,
+            'review_form': form,
+            'review_avg': avg_rating,
+        }
+        
+        return render(request, 'products/product_detail_page.html', context)
+        
+    except Exception as e:
+        # Log l'erreur pour le débogage
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Erreur dans la vue product_detail: {str(e)}")
+        
+        # Afficher une page d'erreur générique
+        return render(request, 'error.html', 
+                     {'message': _("Une erreur est survenue lors du chargement du produit.")}, 
+                     status=500)
 
 @require_POST
 def capture_lead(request):
@@ -159,32 +206,52 @@ def add_review(request, product_slug):
         form = ReviewForm(request.POST, user=request.user)
         
         if form.is_valid():
-            review = form.save(commit=False)
-            review.product = product
-            
-            # Si l'utilisateur est connecté, on l'associe à l'avis
-            if request.user.is_authenticated:
-                review.user = request.user
-            
-            # Marquer l'avis comme approuvé (ou non selon votre politique de modération)
-            review.is_approved = True
-            review.save()
-            
-            # Préparer la réponse avec le nouvel avis
-            from django.template.loader import render_to_string
-            
-            context = {
-                'review': review,
-                'user': request.user if request.user.is_authenticated else None
-            }
-            
-            review_html = render_to_string('components/review_item.html', context, request)
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Merci pour votre avis !',
-                'review_html': review_html
-            })
+            with transaction.atomic():
+                review = form.save(commit=False)
+                review.product = product
+                
+                # Si l'utilisateur est connecté, on l'associe à l'avis
+                if request.user.is_authenticated:
+                    review.user = request.user
+                
+                # Marquer l'avis comme approuvé (ou non selon votre politique de modération)
+                review.is_approved = True
+                review.save()
+                
+                # Recharger l'objet pour s'assurer que toutes les relations sont chargées
+                review.refresh_from_db()
+                
+                # Préparer la réponse avec le nouvel avis
+                from django.template.loader import render_to_string
+                
+                context = {
+                    'review': review,
+                    'user': request.user if request.user.is_authenticated else None
+                }
+                
+                # Rendre le template en supprimant les espaces inutiles
+                review_html = render_to_string('components/review_item.html', context, request)
+                # Nettoyer le HTML généré
+                import re
+                review_html = re.sub(r'>\s+<', '><', review_html)  # Supprimer les espaces entre les balises
+                review_html = review_html.strip()  # Supprimer les espaces au début et à la fin
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Merci pour votre avis !',
+                    'review': {
+                        'id': review.id,
+                        'first_name': review.first_name or '',
+                        'last_name': review.last_name or '',
+                        'rating': review.rating,
+                        'rating_display': review.get_rating_display(),
+                        'comment': review.comment,
+                        'title': review.title or '',
+                        'created_at': review.created_at.strftime('%d/%m/%Y %H:%M'),
+                        'timestamp': int(review.created_at.timestamp())
+                    },
+                    'review_html': review_html
+                })
         else:
             # Convertir les erreurs de formulaire en un format plus lisible
             from django.forms.utils import ErrorDict

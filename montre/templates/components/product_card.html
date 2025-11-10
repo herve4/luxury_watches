@@ -1,0 +1,85 @@
+<div class="flex flex-col h-full">
+    <!-- Image du produit -->
+    <div class="relative overflow-hidden rounded-t-lg bg-gray-100" style="padding-bottom: 100%;">
+        <a href="{% url 'product_detail' slug=product.slug %}" class="absolute inset-0 flex items-center justify-center">
+            {% if product.images.first %}
+                <img src="{{ product.images.first.image.url }}" 
+                     alt="{{ product.name }}" 
+                     class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+            {% else %}
+                <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+            {% endif %}
+            
+            <!-- Badge de réduction -->
+            {% if product.compare_at_price and product.compare_at_price > product.price %}
+                <span class="absolute top-3 right-3 bg-red-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    -{{ product.discount_percentage|floatformat:0 }}%
+                </span>
+            {% endif %}
+            
+            <!-- Badge Nouveauté -->
+            {% if product.is_new %}
+                <span class="absolute top-3 left-3 bg-amber-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    Nouveau
+                </span>
+            {% endif %}
+        </a>
+    </div>
+    
+    <!-- Détails du produit -->
+    <div class="flex-1 p-4 flex flex-col">
+        <!-- Catégorie -->
+        <div class="text-xs text-amber-600 font-medium mb-1">
+            {{ product.category.name|default:"Montres de luxe" }}
+        </div>
+        
+        <!-- Nom du produit -->
+        <h3 class="text-gray-900 font-medium mb-2 line-clamp-2 hover:text-amber-600 transition-colors">
+            <a href="{% url 'product_detail' slug=product.slug %}">
+                {{ product.name }}
+            </a>
+        </h3>
+        
+        <!-- Prix -->
+        <div class="mt-auto">
+            <div class="flex items-center">
+                <span class="text-lg font-bold text-gray-900">{{ product.price }} FCFA</span>
+                {% if product.compare_at_price %}
+                    <span class="ml-2 text-sm text-gray-500 line-through">{{ product.compare_at_price }} FCFA</span>
+                {% endif %}
+            </div>
+            
+            <!-- Note moyenne -->
+            {% if product.average_rating %}
+                <div class="flex items-center mt-2">
+                    <div class="flex items-center">
+                        {% for i in "12345"|make_list %}
+                            {% if i|add:0 <= product.average_rating|floatformat:0|add:0 %}
+                                <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                            {% else %}
+                                <svg class="w-4 h-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <span class="text-xs text-gray-500 ml-1">({{ product.review_count }})</span>
+                </div>
+            {% endif %}
+            
+            <!-- Bouton d'ajout au panier -->
+            {% comment %} <div class="mt-4">
+                <button class="add-to-cart w-full bg-amber-600 hover:bg-amber-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200"
+                        data-product-id="{{ product.id }}">
+                    Ajouter au panier
+                </button>
+            </div> {% endcomment %}
+        </div>
+    </div>
+</div>

@@ -1,0 +1,777 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}{{ product.name }} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Fil d'Ariane -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'index' %}" class="text-gray-700 hover:text-gold-600">
+                    Accueil
+                </a>
+            </li>
+            <li class="inline-flex items-center">
+                <span class="text-gray-400 mx-2">/</span>
+                <a href="{% url 'product_list' %}" class="text-gray-700 hover:text-gold-600">
+                    Boutique
+                </a>
+            </li>
+            <li class="inline-flex items-center" aria-current="page">
+                <span class="text-gray-400 mx-2">/</span>
+                <span class="text-gold-600">{{ product.name|truncatechars:30 }}</span>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Section principale du produit -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-6">
+            <!-- Galerie d'images -->
+            <div class="space-y-4">
+                <div class="relative overflow-hidden rounded-lg bg-gray-100" style="padding-bottom: 100%;">
+                    <img src="{{ product.images.first.image.url }}" 
+                         alt="{{ product.name }}" 
+                         class="absolute inset-0 w-full h-full object-cover"
+                         id="main-product-image">
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    {% for image in images|slice:":4" %}
+                    <button class="relative overflow-hidden rounded-md bg-gray-100" 
+                            style="padding-bottom: 100%;"
+                            onclick="changeMainImage('{{ image.image.url }}')">
+                        <img src="{{ image.image.url }}" 
+                             alt="{{ product.name }} - Vue {{ forloop.counter }}" 
+                             class="absolute inset-0 w-full h-full object-cover">
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Détails du produit -->
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ product.name }}</h1>
+                
+                <!-- Prix et disponibilité -->
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <span class="text-2xl font-bold text-gray-900">{{ product.price }} XOF (FCFA)</span>
+                        {% if product.compare_at_price %}
+                        <span class="ml-2 text-lg text-gray-500 line-through">{{ product.compare_at_price }} XOF (FCFA)</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-sm">
+                        {% if product.in_stock > 0 %}
+                        <span class="inline-flex items-center text-green-600">
+                            <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            En stock
+                        </span>
+                        {% else %}
+                        <span class="text-red-600">Rupture de stock</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="prose max-w-none text-gray-600 mb-6">
+                    {{ product.description|safe }}
+                </div>
+
+                <!-- Options (si disponibles) -->
+                {% if product.variants.exists %}
+                <div class="mb-6">
+                    <label for="variant" class="block text-sm font-medium text-gray-700 mb-2">Options disponibles</label>
+                    <select id="variant" name="variant" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-gold-500 focus:border-gold-500">
+                        {% for variant in product.variants.all %}
+                        <option value="{{ variant.id }}">{{ variant.name }} - {{ variant.price }} XOF (FCFA)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <!-- Formulaire d'ajout au panier -->
+                <form action="{% url 'order_create' product_slug=product.slug %}" method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="space-y-4">
+                        {% comment %} <div class="flex items-center space-x-4">
+                            <div class="flex items-center border border-gray-300 rounded-md overflow-hidden">
+                                <button type="button" onclick="decrementQuantity()" class="px-3 py-2 text-gray-600 hover:bg-gray-100">-</button>
+                                <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ product.in_stock }}" 
+                                       class="w-16 text-center border-0 focus:ring-0">
+                                <button type="button" onclick="incrementQuantity()" class="px-3 py-2 text-gray-600 hover:bg-gray-100">+</button>
+                            </div>
+                        </div> {% endcomment %}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <a href="{% url 'order_create' product_slug=product.slug %}" 
+                               class="text-center  py-2 px-6 rounded-md font-medium" style="background-color: #FFD700; color: #000; transition-colors">
+                                Commander
+                            </a>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Garanties et livraison -->
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-gold-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Livraison gratuite
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-gold-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Retour gratuit sous 30 jours
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-gold-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Paiement sécurisé
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-gold-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Garantie 2 ans
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Détails supplémentaires -->
+        <div class="border-t border-gray-200 px-6 py-8">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Détails du produit</h2>
+                
+                <!-- Caractéristiques -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-3">Caractéristiques</h3>
+                        <dl class="space-y-3">
+                            <div class="flex">
+                                <dt class="w-1/3 text-gray-500">Marque</dt>
+                                <dd class="text-gray-900">{{ product.brand|default:"Non spécifié" }}</dd>
+                            </div>
+                            <div class="flex">
+                                <dt class="w-1/3 text-gray-500">Modèle</dt>
+                                <dd class="text-gray-900">{{ product.model|default:"Non spécifié" }}</dd>
+                            </div>
+                            <div class="flex">
+                                <dt class="w-1/3 text-gray-500">Référence</dt>
+                                <dd class="text-gray-900">{{ product.sku|default:"Non spécifié" }}</dd>
+                            </div>
+                            <div class="flex">
+                                <dt class="w-1/3 text-gray-500">Mouvement</dt>
+                                <dd class="text-gray-900">{{ product.movement_type|default:"Non spécifié" }}</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-3">Spécifications</h3>
+                        <dl class="space-y-3">
+                            <div class="flex">
+                                <dt class="w-1/3 text-gray-500">Bracelet</dt>
+                                <dd class="text-gray-900">{{ product.bracelet_material|default:"Non spécifié" }}</dd>
+                            </div>
+                            <div class="flex">
+                                <dt class="w-1/3 text-gray-500">Boîtier</dt>
+                                <dd class="text-gray-900">{{ product.case_material|default:"Non spécifié" }}</dd>
+                            </div>
+                            <div class="flex">
+                                <dt class="w-1/3 text-gray-500">Étanchéité</dt>
+                                <dd class="text-gray-900">{{ product.water_resistance|default:"Non spécifié" }}</dd>
+                            </div>
+                            <div class="flex">
+                                <dt class="w-1/3 text-gray-500">Garantie</dt>
+                                <dd class="text-gray-900">2 ans</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avis des clients -->
+        <div class="bg-gradient-to-b from-gray-50 to-white px-6 py-12">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-4">Ce que nos clients en pensent</h2>
+                    <div class="w-20 h-1 bg-amber-500 mx-auto mb-6"></div>
+                    <p class="text-gray-600 max-w-2xl mx-auto">Découvrez les avis de nos clients satisfaits et partagez votre expérience avec nous.</p>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-8 mb-12">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+                        <div class="text-center md:text-left mb-6 md:mb-0">
+                            <div class="text-5xl font-bold text-gray-900 mb-2">{{ review_avg|default:"0"|floatformat:1 }}<span class="text-2xl text-gray-500">/5</span></div>
+                            <div class="flex justify-center md:justify-start mb-2">
+                                {% for i in "12345"|make_list %}
+                                    {% if i|add:0 <= review_avg|default:0|floatformat:0|add:0 %}
+                                        <svg class="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                    {% else %}
+                                        <svg class="w-6 h-6 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                        </svg>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="text-sm text-gray-500">Basé sur {{ reviews.count }} avis</p>
+                        </div>
+                        <button type="button" 
+                                id="open-review-modal"
+                                class="px-6 py-3 font-medium rounded-lg shadow-md z-10 relative" style="min-width: 160px; background-color: #FFC107; color: #000; hover:bg-amber-700; transition: background-color 0.3s ease;"
+                                onclick="openReviewModal()">
+                            <span class="flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
+                                </svg>
+                                Laisser un avis
+                            </span>
+                        </button>
+                    </div>
+
+                <!-- Liste des avis -->
+                <div id="reviews-list" class="space-y-6 mb-6">
+                    <!-- Afficher uniquement les 3 premiers avis -->
+                    {% for review in reviews|slice:":3" %}
+                        <div class="review-item bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                            {% include 'components/review_item.html' %}
+                        </div>
+                    {% empty %}
+                        <div class="no-reviews text-center py-12 bg-white rounded-xl shadow-sm">
+                            <svg class="mx-auto h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                            </svg>
+                            <h3 class="mt-4 text-lg font-medium text-gray-900">Aucun avis pour le moment</h3>
+                    {% endfor %}
+                </div>
+                </div> <!-- Fermeture du div avec la classe bg-white rounded-xl shadow-lg p-8 mb-12 -->
+
+                <!-- Message de statut du formulaire -->
+                <div id="form-message" class="hidden mb-4"></div>
+                
+                <!-- Inclusion du formulaire modal d'avis -->
+                {% include 'components/review_form_modal.html' %}
+        </div>
+    </div>
+
+    <!-- Produits associés -->
+    {% if related_products %}
+    <div class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900">Vous aimerez aussi</h2>
+                <div class="w-20 h-1 bg-amber-500 mx-auto mt-4"></div>
+                <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">Découvrez d'autres articles qui pourraient vous intéresser</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {% for product in related_products %}
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                            {% include 'components/product_card.html' %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Modal d'ajout au panier -->
+    <div id="add-to-cart-modal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Fond semi-transparent -->
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            
+            <!-- Contenu du modal -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                Produit ajouté au panier
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500">
+                                    Le produit a été ajouté à votre panier avec succès.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <a href="{% url 'cart' %}" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-amber-600 text-base font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Voir le panier
+                    </a>
+                    <button type="button" onclick="closeAddToCartModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                        Continuer mes achats
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fonctions pour le modal d'ajout au panier
+function showAddToCartModal() {
+    const modal = document.getElementById('add-to-cart-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeAddToCartModal() {
+    const modal = document.getElementById('add-to-cart-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Fermer le modal en cliquant en dehors
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('add-to-cart-modal');
+    if (event.target === modal) {
+        closeAddToCartModal();
+    }
+});
+
+// Gestionnaire d'événement pour le bouton "Ajouter au panier"
+document.addEventListener('DOMContentLoaded', function() {
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+    
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const productId = this.dataset.productId;
+            
+            // Ici, vous pouvez ajouter la logique pour ajouter le produit au panier
+            // via une requête AJAX, puis appeler showAddToCartModal() en cas de succès
+            
+            // Pour l'instant, on affiche simplement le modal
+            showAddToCartModal();
+            
+            // Exemple de code pour l'ajout au panier (à décommenter et adapter) :
+            /*
+            fetch('/panier/ajouter/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    quantity: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAddToCartModal();
+                    // Mettre à jour le compteur du panier si nécessaire
+                    const cartCount = document.getElementById('cart-count');
+                    if (cartCount) {
+                        cartCount.textContent = data.cart_item_count || '0';
+                    }
+                } else {
+                    showMessage(data.message || 'Une erreur est survenue', true);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showMessage('Une erreur est survenue lors de l\'ajout au panier', true);
+            });
+            */
+        });
+    });
+});
+
+// Fonction pour afficher un message de succès ou d'erreur
+function showMessage(message, isError = false) {
+    const messageDiv = document.getElementById('form-message');
+    if (!messageDiv) return;
+    
+    messageDiv.textContent = message;
+    messageDiv.className = `p-4 mb-4 rounded ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+    messageDiv.style.display = 'block';
+    
+    // Masquer le message après 5 secondes
+    setTimeout(() => {
+        messageDiv.style.display = 'none';
+    }, 5000);
+}
+
+// Fonction pour réinitialiser le formulaire
+function resetReviewForm() {
+    const form = document.querySelector('#review-form form');
+    if (form) {
+        form.reset();
+        setRating(5); // Réinitialiser la notation à 5 étoiles
+        
+        // Réinitialiser manuellement les champs si nécessaire
+        const titleInput = form.querySelector('#title');
+        const commentInput = form.querySelector('#comment');
+        
+        if (titleInput) titleInput.value = '';
+        if (commentInput) commentInput.value = '';
+    }
+}
+
+// Gestionnaire de soumission du formulaire d'avis
+document.addEventListener('DOMContentLoaded', function() {
+    const reviewForm = document.querySelector('#review-form form');
+    
+    if (reviewForm) {
+        reviewForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Empêcher la soumission normale du formulaire
+            
+            // Récupérer la note sélectionnée
+            const ratingInput = document.querySelector('input[name="rating"]');
+            if (!ratingInput || !ratingInput.value) {
+                showMessage('Veuillez sélectionner une note', true);
+                return;
+            }
+            
+            const formData = new FormData(this);
+            const url = this.action;
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            // Désactiver le bouton de soumission
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Envoi en cours...';
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Afficher le message de succès
+                    showMessage(data.message, false);
+                    
+                    // Réinitialiser le formulaire
+                    resetReviewForm();
+                    
+                    // Ajouter le nouvel avis à la liste
+                    const reviewsList = document.querySelector('#reviews-list');
+                    if (reviewsList) {
+                        // Créer un nouvel élément d'avis
+                        const reviewElement = document.createElement('div');
+                        reviewElement.className = 'border-b border-gray-200 pb-6 last:border-0 last:pb-0';
+                        
+                        // Construire le HTML de l'avis
+                        reviewElement.innerHTML = `
+                            <div class="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50 hover:shadow-lg hover:border-amber-500/30 transition-all duration-300">
+                                <div class="flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-white font-bold text-xl">
+                                            ${data.review.first_name ? data.review.first_name.charAt(0).toUpperCase() : 'V'}
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <h4 class="text-lg font-bold text-white">
+                                                    ${data.review.first_name || ''} ${data.review.last_name ? data.review.last_name.toUpperCase() : '' || 'Visiteur'}
+                                                </h4>
+                                                <div class="flex items-center text-sm text-slate-400 mt-1">
+                                                    <span class="flex items-center" title="${data.review.created_at}" data-timestamp="${data.review.timestamp}">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        <span class="time-ago">À l'instant</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="bg-amber-500/10 px-3 py-1 rounded-full flex items-center">
+                                                <span class="text-amber-400 font-bold mr-1">${data.review.rating}</span>
+                                                <span class="text-amber-400">/</span>
+                                                <span class="text-slate-400 ml-1">5</span>
+                                            </div>
+                                        </div>
+                                        
+                                        ${data.review.title ? `<h5 class="text-lg font-semibold text-white mt-3">${data.review.title}</h5>` : ''}
+                                        
+                                        <div class="flex items-center mt-2 mb-4">
+                                            <div class="flex">
+                                                ${Array(5).fill().map((_, i) => 
+                                                    `<svg class="w-5 h-5 ${i < data.review.rating ? 'text-amber-400' : 'text-slate-600'}" 
+                                                         fill="currentColor" 
+                                                         viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                                    </svg>`
+                                                ).join('')}
+                                            </div>
+                                            <span class="text-sm text-slate-400 ml-2">${data.review.rating_display}</span>
+                                        </div>
+                                        
+                                        <div class="bg-slate-800/70 rounded-lg p-4 border border-slate-700/50">
+                                            <p class="text-slate-300 leading-relaxed">${data.review.comment.replace(/\n/g, '<br>')}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Ajouter le nouvel avis en haut de la liste
+                        reviewsList.prepend(reviewElement);
+                        
+                        // Mettre à jour les horodatages
+                        updateTimestamps();
+                    }
+                } else {
+                    // Afficher les erreurs de validation
+                    let errorMessage = 'Veuillez corriger les erreurs ci-dessous.';
+                    if (data.errors) {
+                        errorMessage = Object.values(data.errors).join('\n');
+                    }
+                    showMessage(errorMessage, true);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showMessage('Une erreur est survenue lors de l\'envoi de votre avis. Veuillez réessayer.', true);
+            })
+            .finally(() => {
+                // Réactiver le bouton de soumission
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+                
+                // Faire défiler jusqu'au formulaire pour afficher les messages d'erreur
+                reviewForm.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    }
+});
+
+// Fonction pour changer l'image principale
+function changeMainImage(src) {
+    document.getElementById('main-product-image').src = src;
+}
+
+// Gestion de la quantité
+function incrementQuantity() {
+    const quantityInput = document.getElementById('quantity');
+    const max = parseInt(quantityInput.max);
+    if (parseInt(quantityInput.value) < max) {
+        quantityInput.value = parseInt(quantityInput.value) + 1;
+    }
+}
+
+function decrementQuantity() {
+    const quantityInput = document.getElementById('quantity');
+    if (parseInt(quantityInput.value) > 1) {
+        quantityInput.value = parseInt(quantityInput.value) - 1;
+    }
+}
+
+// Gestion de la notation
+function setRating(rating) {
+    const stars = document.querySelectorAll('#rating-stars button');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.remove('text-gray-300');
+            star.classList.add('text-yellow-400');
+        } else {
+            star.classList.remove('text-yellow-400');
+            star.classList.add('text-gray-300');
+        }
+    });
+    document.getElementById('rating').value = rating;
+}
+
+// Fonction pour ouvrir le modal
+function openReviewModal() {
+    const modal = document.getElementById('review-drawer');
+    const modalContent = modal ? modal.querySelector('.bg-white') : null;
+    const overlay = document.getElementById('review-overlay');
+    
+    if (!modal || !modalContent || !overlay) {
+        console.error('Éléments du modal non trouvés', {modal, modalContent, overlay});
+        return;
+    }
+    
+    console.log('Ouverture du modal...');
+    
+    // Afficher le modal
+    modal.classList.remove('hidden');
+    
+    // Forcer le recalcul du style pour activer la transition
+    void modal.offsetHeight;
+    
+    // Désactiver le défilement de la page
+    document.body.style.overflow = 'hidden';
+    
+    // Animation d'ouverture
+    setTimeout(() => {
+        overlay.classList.remove('opacity-0');
+        overlay.classList.add('opacity-100');
+        modalContent.classList.remove('opacity-0', 'translate-y-4', 'sm:scale-95');
+        modalContent.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
+    }, 10);
+}
+
+// Fonction pour fermer le modal
+function closeReviewModal() {
+    const modal = document.getElementById('review-drawer');
+    const modalContent = modal ? modal.querySelector('.bg-white') : null;
+    const overlay = document.getElementById('review-overlay');
+    
+    if (!modal || !modalContent || !overlay) {
+        console.error('Éléments du modal non trouvés');
+        return;
+    }
+    
+    console.log('Fermeture du modal...');
+    
+    // Animation de fermeture
+    overlay.classList.remove('opacity-100');
+    overlay.classList.add('opacity-0');
+    modalContent.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
+    modalContent.classList.add('opacity-0', 'translate-y-4', 'sm:scale-95');
+    
+    // Cacher le modal après l'animation
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }, 200);
+}
+
+// Initialisation au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM chargé, initialisation...');
+    
+    // Initialiser la notation à 5 étoiles par défaut
+    setRating(5);
+    
+    // Gestionnaire d'événement pour le bouton d'ouverture
+    const openButton = document.getElementById('open-review-modal');
+    if (openButton) {
+        console.log('Bouton d\'ouverture trouvé');
+        openButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            openReviewModal();
+        });
+    } else {
+        console.error('Bouton d\'ouverture non trouvé');
+    }
+    
+    // Gestionnaire d'événement pour le bouton de fermeture
+    const closeButton = document.querySelector('[data-drawer-hide="review-drawer"]');
+    if (closeButton) {
+        closeButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            closeReviewModal();
+        });
+    }
+    
+    // Fermer en cliquant sur l'overlay
+    const overlay = document.getElementById('review-overlay');
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                closeReviewModal();
+            }
+        });
+    }
+    
+    // Fermer avec la touche Échap
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('review-drawer');
+            if (modal && !modal.classList.contains('hidden')) {
+                closeReviewModal();
+            }
+        }
+    });
+    
+    console.log('Initialisation terminée');
+    
+    // Gestion de l'affichage des avis supplémentaires
+    const toggleButton = document.getElementById('toggle-reviews');
+    const moreReviews = document.getElementById('more-reviews');
+    const toggleIcon = document.getElementById('toggle-icon');
+    const toggleText = document.getElementById('toggle-text');
+    
+    if (toggleButton && moreReviews && toggleIcon && toggleText) {
+        let isExpanded = false;
+        const totalReviews = parseInt('{{ reviews.count }}');
+        
+        toggleButton.addEventListener('click', function() {
+            if (isExpanded) {
+                // Réduire
+                moreReviews.classList.add('hidden');
+                toggleIcon.classList.remove('rotate-180');
+                toggleText.textContent = `Afficher les ${totalReviews - 3} autres avis`;
+            } else {
+                // Développer
+                moreReviews.classList.remove('hidden');
+                toggleIcon.classList.add('rotate-180');
+                toggleText.textContent = 'Réduire les avis';
+            }
+            isExpanded = !isExpanded;
+        });
+        
+        // Mettre à jour le texte du bouton si des avis sont ajoutés dynamiquement
+        const updateToggleButtonText = () => {
+            const currentReviews = document.querySelectorAll('.review-item').length;
+            if (currentReviews > 3) {
+                toggleButton.style.display = 'flex';
+                toggleText.textContent = `Afficher les ${currentReviews - 3} autres avis`;
+            }
+        };
+        
+        // Mettre à jour le bouton après l'ajout d'un nouvel avis
+        window.addEventListener('reviewAdded', updateToggleButtonText);
+        
+        // Initialiser le texte du bouton
+        updateToggleButtonText();
+    }
+});
+
+// Fonction pour mettre à jour le compteur d'avis
+function updateReviewsCount(change) {
+    const countElement = document.getElementById('reviews-count');
+    if (countElement) {
+        const currentCount = parseInt(countElement.textContent) || 0;
+        const newCount = currentCount + change;
+        countElement.textContent = newCount;
+        
+        // Mettre à jour le texte "Aucun avis" si nécessaire
+        const noReviewsText = document.querySelector('#reviews-list .no-reviews');
+        if (noReviewsText && newCount > 0) {
+            noReviewsText.remove();
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.utils.translation import gettext_lazy as _
 from .models import Product, Category, Review
+from django.db import models
 from .forms import ReviewForm
 
 def product_detail(request, slug):
@@ -61,7 +62,7 @@ def product_detail(request, slug):
             'review_avg': avg_rating,
         }
         
-        return render(request, 'products/product_detail.html', context)
+        return render(request, 'products/product_detail_page.html', context)
         
     except Exception as e:
         # Log l'erreur pour le débogage
