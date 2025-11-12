@@ -1,0 +1,137 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ title|default:"Catégorie" }} - BoutiLuxe{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- En-tête de la catégorie -->
+        <div class="text-center mb-12">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ category.name }}</h1>
+            {% if category.description %}
+                <p class="text-gray-600 max-w-3xl mx-auto">{{ category.description }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Filtres et tri -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+            <p class="text-gray-600 mb-4 md:mb-0">
+                {{ products.paginator.count }} produit{% if products.paginator.count > 1 %}s{% endif %}
+            </p>
+            <div class="flex items-center space-x-4">
+                <label for="sort" class="text-sm font-medium text-gray-700">Trier par :</label>
+                <select id="sort" class="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm rounded-md">
+                    <option value="newest">Nouveautés</option>
+                    <option value="price_asc">Prix croissant</option>
+                    <option value="price_desc">Prix décroissant</option>
+                    <option value="popularity">Popularité</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Liste des produits -->
+        {% if products %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {% for product in products %}
+                    <div class="group relative bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <a href="{% url 'product_detail' product.slug %}" class="block">
+                            <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden bg-gray-200">
+                                {% if product.images.first %}
+                                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="w-full h-64 object-cover object-center group-hover:opacity-75">
+                                {% else %}
+                                    <div class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                                        <span class="text-gray-400">Aucune image</span>
+                                    </div>
+                                {% endif %}
+                                {% if product.is_new %}
+                                    <span class="absolute top-2 right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">Nouveau</span>
+                                {% endif %}
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-sm font-medium text-gray-900">{{ product.name }}</h3>
+                                <div class="mt-2 flex justify-between items-center">
+                                    <p class="text-sm text-gray-900 font-semibold">{{ product.price }} €</p>
+                                    {% if product.old_price %}
+                                        <p class="text-xs text-gray-500 line-through">{{ product.old_price }} €</p>
+                                    {% endif %}
+                                </div>
+                                {% if product.average_rating %}
+                                    <div class="mt-2 flex items-center">
+                                        <div class="flex items-center">
+                                            {% for i in "12345"|make_list %}
+                                                {% if forloop.counter <= product.average_rating %}
+                                                    <svg class="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                    </svg>
+                                                {% else %}
+                                                    <svg class="h-4 w-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                    </svg>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="text-xs text-gray-500 ml-1">({{ product.review_count }})</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if products.has_other_pages %}
+                <nav class="mt-12 flex justify-center" aria-label="Pagination">
+                    <ul class="flex items-center space-x-2">
+                        {% if products.has_previous %}
+                            <li>
+                                <a href="?page={{ products.previous_page_number }}" class="px-3 py-1 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    Précédent
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        {% for i in products.paginator.page_range %}
+                            {% if products.number == i %}
+                                <li>
+                                    <span class="px-3 py-1 rounded-md border border-yellow-500 bg-yellow-50 text-sm font-medium text-yellow-600">
+                                        {{ i }}
+                                    </span>
+                                </li>
+                            {% else %}
+                                <li>
+                                    <a href="?page={{ i }}" class="px-3 py-1 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                        {{ i }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if products.has_next %}
+                            <li>
+                                <a href="?page={{ products.next_page_number }}" class="px-3 py-1 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                    Suivant
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun produit trouvé</h3>
+                <p class="mt-1 text-sm text-gray-500">Désolé, nous n'avons trouvé aucun produit dans cette catégorie pour le moment.</p>
+                <div class="mt-6">
+                    <a href="{% url 'product_list' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                        Voir tous les produits
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

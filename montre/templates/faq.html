@@ -1,0 +1,130 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}FAQ - BoutiLuxe{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Foire aux questions</h1>
+            <p class="text-lg text-gray-600">Trouvez les réponses aux questions les plus fréquemment posées</p>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Section Livraison -->
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <h2 class="px-6 py-4 bg-gray-100 text-xl font-semibold text-gray-800">
+                    <i class="fas fa-truck mr-2 text-yellow-500"></i> Livraison
+                </h2>
+                <div class="divide-y divide-gray-200">
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Quels sont les délais de livraison ?</h3>
+                        <p class="text-gray-600">Les commandes sont expédiées sous 24 à 48h ouvrées. Les délais de livraison varient selon la destination, généralement entre 2 et 5 jours ouvrés.</p>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Quels sont les frais de livraison ?</h3>
+                        <p class="text-gray-600">La livraison standard est offerte à partir de 200€ d'achat. En dessous de ce montant, des frais de 9,90€ s'appliquent.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Paiement -->
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <h2 class="px-6 py-4 bg-gray-100 text-xl font-semibold text-gray-800">
+                    <i class="fas fa-credit-card mr-2 text-yellow-500"></i> Paiement
+                </h2>
+                <div class="divide-y divide-gray-200">
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Quels moyens de paiement acceptez-vous ?</h3>
+                        <p class="text-gray-600">Nous acceptons les cartes bancaires (Visa, Mastercard, American Express), PayPal et virements bancaires.</p>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Le paiement est-il sécurisé ?</h3>
+                        <p class="text-gray-600">Oui, tous les paiements sont cryptés et sécurisés grâce à notre partenaire de paiement certifié PCI-DSS.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Retours -->
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <h2 class="px-6 py-4 bg-gray-100 text-xl font-semibold text-gray-800">
+                    <i class="fas fa-undo-alt mr-2 text-yellow-500"></i> Retours & Échanges
+                </h2>
+                <div class="divide-y divide-gray-200">
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Quelle est votre politique de retour ?</h3>
+                        <p class="text-gray-600">Vous disposez de 14 jours à compter de la réception de votre commande pour effectuer un retour. Les articles doivent être retournés dans leur état d'origine, non portés et avec leur emballage d'origine.</p>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">Comment effectuer un retour ?</h3>
+                        <p class="text-gray-600">Connectez-vous à votre compte, allez dans la section "Mes commandes" et suivez la procédure de retour. Un bon de retour vous sera fourni à imprimer et à joindre à votre colis.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section Garantie -->
+            <div class="bg-white shadow rounded-lg overflow-hidden">
+                <h2 class="px-6 py-4 bg-gray-100 text-xl font-semibold text-gray-800">
+                    <i class="fas fa-shield-alt mr-2 text-yellow-500"></i> Garantie
+                </h2>
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Quelle est la durée de la garantie ?</h3>
+                    <p class="text-gray-600 mb-4">Toutes nos montres bénéficient d'une garantie constructeur de 2 ans couvrant les défauts de fabrication.</p>
+                    
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Que couvre la garantie ?</h3>
+                    <p class="text-gray-600">La garantie couvre les défauts de matériaux et de fabrication. Elle ne couvre pas les dommages dus à une mauvaise utilisation, un choc ou un manque d'entretien.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section Contact -->
+        <div class="mt-12 bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-question-circle text-yellow-400 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-yellow-800">Vous ne trouvez pas de réponse à votre question ?</h3>
+                    <div class="mt-2 text-yellow-700">
+                        <p>Notre service client est à votre disposition du lundi au vendredi de 9h à 18h.</p>
+                        <div class="mt-4">
+                            <a href="{% url 'contact' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                                <i class="fas fa-envelope mr-2"></i> Nous contacter
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Script pour gérer l'affichage des réponses
+document.addEventListener('DOMContentLoaded', function() {
+    const questions = document.querySelectorAll('.question');
+    
+    questions.forEach(question => {
+        question.addEventListener('click', () => {
+            const answer = question.nextElementSibling;
+            const icon = question.querySelector('.toggle-icon');
+            
+            // Basculer l'affichage de la réponse
+            answer.classList.toggle('hidden');
+            
+            // Changer l'icône
+            if (answer.classList.contains('hidden')) {
+                icon.classList.remove('fa-minus');
+                icon.classList.add('fa-plus');
+            } else {
+                icon.classList.remove('fa-plus');
+                icon.classList.add('fa-minus');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

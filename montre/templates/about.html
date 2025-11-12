@@ -1,0 +1,135 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}À propos - BoutiLuxe{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-900 text-white">
+    <!-- Hero Section -->
+    <div class="relative bg-gradient-to-b from-gray-800 to-gray-900 py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-gold-500 mb-6">Notre Histoire</h1>
+            <p class="text-xl text-gray-300 max-w-3xl mx-auto">Découvrez l'univers d'exception de BoutiLuxe, où l'art horloger rencontre l'élégance intemporelle.</p>
+        </div>
+    </div>
+
+    <!-- Notre Histoire -->
+    <div class="py-16 bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:flex lg:items-center lg:justify-between">
+                <div class="lg:w-1/2 lg:pr-12 mb-12 lg:mb-0">
+                    <h2 class="text-3xl font-bold text-white mb-6">L'Excellence depuis 2023</h2>
+                    <div class="prose prose-invert max-w-none">
+                        <p class="text-gray-300 mb-6">
+                            Fondée en 2023, BoutiLuxe incarne l'alliance parfaite entre tradition horlogère suisse et design contemporain. Notre passion pour l'excellence nous guide dans la sélection des pièces les plus raffinées pour les amateurs de montres de luxe.
+                        </p>
+                        <p class="text-gray-300 mb-6">
+                            Chaque montre que nous proposons est le fruit d'un savoir-faire artisanal exceptionnel, alliant précision technique et esthétique raffinée. Notre engagement envers la qualité et l'authenticité fait de nous un acteur de référence dans l'univers de l'horlogerie de luxe.
+                        </p>
+                        <p class="text-gray-300">
+                            Chez BoutiLuxe, nous croyons qu'une montre est bien plus qu'un simple accessoire : c'est un héritage à transmettre, une histoire à raconter, un compagnon de vie qui traverse les générations.
+                        </p>
+                    </div>
+                </div>
+                <div class="lg:w-1/2">
+                    <div class="relative rounded-lg overflow-hidden shadow-2xl">
+                        <img src="{% static 'images/montre8.jpg' %}" alt="Montre de luxe BoutiLuxe" class="w-full h-auto">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-70"></div>
+                        <div class="absolute bottom-0 left-0 p-8 text-white">
+                            <span class="text-gold-500 font-semibold">Depuis 2023</span>
+                            <h3 class="text-2xl font-bold mt-2">L'Art de la Précision</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notre Engagement -->
+    <div class="py-16 bg-gray-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-white mb-4">Notre Engagement</h2>
+                <div class="w-24 h-1 bg-gold-500 mx-auto"></div>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-gray-900 p-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-gold-500 text-4xl mb-4">
+                        <i class="fas fa-gem"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Qualité Exceptionnelle</h3>
+                    <p class="text-gray-400">Chaque montre est minutieusement sélectionnée pour sa qualité irréprochable et son savoir-faire artisanal exceptionnel.</p>
+                </div>
+                
+                <div class="bg-gray-900 p-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-gold-500 text-4xl mb-4">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Authenticité Garantie</h3>
+                    <p class="text-gray-400">Toutes nos montres sont accompagnées d'un certificat d'authenticité et d'une garantie constructeur.</p>
+                </div>
+                
+                <div class="bg-gray-900 p-8 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <div class="text-gold-500 text-4xl mb-4">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Service Client Premium</h3>
+                    <p class="text-gray-400">Notre équipe d'experts est à votre écoute pour vous conseiller et vous accompagner dans votre choix.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notre Équipe -->
+    <div class="py-16 bg-gray-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-white mb-4">Rencontrez Notre Équipe</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">Des passionnés d'horlogerie à votre service pour vous guider dans votre recherche de la montre parfaite.</p>
+                <div class="w-24 h-1 bg-gold-500 mx-auto mt-4"></div>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-48 h-48 mx-auto mb-6 rounded-full overflow-hidden border-4 border-gold-500">
+                        <img src="https://randomuser.me/api/portraits/women/43.jpg" alt="Sophie Martin" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="text-xl font-semibold text-white">Sophie Martin</h3>
+                    <p class="text-gold-500 mb-2">Fondatrice & Directrice</p>
+                    <p class="text-gray-400 text-sm">15 ans d'expérience dans l'horlogerie de luxe</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-48 h-48 mx-auto mb-6 rounded-full overflow-hidden border-4 border-gold-500">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Thomas Dubois" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="text-xl font-semibold text-white">Thomas Dubois</h3>
+                    <p class="text-gold-500 mb-2">Expert Horloger</p>
+                    <p class="text-gray-400 text-sm">Maître horloger certifié, spécialiste des mouvements mécaniques</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-48 h-48 mx-auto mb-6 rounded-full overflow-hidden border-4 border-gold-500">
+                        <img src="https://randomuser.me/api/portraits/women/28.jpg" alt="Camille Leroy" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="text-xl font-semibold text-white">Camille Leroy</h3>
+                    <p class="text-gold-500 mb-2">Responsable Clientèle</p>
+                    <p class="text-gray-400 text-sm">À votre écoute pour répondre à toutes vos questions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="bg-gradient-to-r from-gold-600 to-gold-700 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl font-bold text-white mb-6">Prêt à Trouver Votre Prochaine Montre de Collection ?</h2>
+            <p class="text-xl text-white mb-8 max-w-3xl mx-auto">Découvrez notre sélection exclusive de montres de luxe et laissez-vous séduire par l'excellence horlogère.</p>
+            <a href="{% url 'product_list' %}" class="inline-block bg-gray-900 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-800 transition-colors duration-300">
+                Découvrir la Collection
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

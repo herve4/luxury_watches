@@ -1,64 +1,100 @@
-<footer class="bg-gray-900 text-white py-12">
+<footer class="bg-gray-900 text-white pt-12 pb-6">
     <div class="container mx-auto px-4">
-        <!-- Première rangée : Logo et description -->
-        <div class="text-center mb-8">
-            <a href="/" class="text-2xl font-bold">
-                <span class="text-white">BOUTI</span><span class="text-yellow-500">LUXE</span>
-            </a>
-            <p class="text-gray-400 mt-2 max-w-md mx-auto">L'excellence horlogère à votre poignet</p>
+        <!-- Première ligne : Logo et slogan -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <!-- Colonne vide pour l'alignement -->
+            <div class="hidden md:block"></div>
+            
+            <!-- Logo centré -->
+            <div class="text-center">
+                <a href="{% url 'index' %}" class="inline-block">
+                    <span class="text-2xl md:text-3xl font-bold text-yellow-500">BOUTI</span>
+                    <span class="text-2xl md:text-3xl font-bold text-white">LUXE</span>
+                </a>
+                <p class="text-gray-400 text-sm mt-2">L'excellence horlogère à votre poignet</p>
+            </div>
+            
+            <!-- Colonne vide pour l'alignement -->
+            <div class="hidden md:block"></div>
         </div>
 
-        <!-- Liens principaux -->
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-8 mb-8">
-            <div>
-                <h3 class="font-semibold mb-4">BOUTILUXE</h3>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Notre histoire</a></li>
-                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Nos valeurs</a></li>
-                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Carrières</a></li>
+        <!-- Deuxième ligne : 3 colonnes -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <!-- Colonne 1 : À propos et réseaux sociaux -->
+            <div class="text-center md:text-left">
+                <h3 class="text-lg font-semibold mb-4 text-yellow-500">À PROPOS</h3>
+                <p class="text-gray-400 text-sm mb-4">Découvrez notre sélection exclusive de montres de luxe, alliant savoir-faire artisanal et élégance intemporelle.</p>
+                <div class="flex justify-center md:justify-start space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-yellow-500 transition-colors">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-yellow-500 transition-colors">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-yellow-500 transition-colors">
+                        <i class="fab fa-pinterest-p"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Colonne 2 : Liens rapides -->
+            <div class="text-center md:text-left">
+                <h3 class="text-lg font-semibold mb-4 text-yellow-500">LIENS RAPIDES</h3>
+                <ul class="space-y-2">
+                    <li><a href="{% url 'about' %}" class="text-gray-400 hover:text-white transition-colors text-sm block">À propos</a></li>
+                    <li><a href="{% url 'contact' %}" class="text-gray-400 hover:text-white transition-colors text-sm block">Contact</a></li>
+                    <li><a href="{% url 'faq' %}" class="text-gray-400 hover:text-white transition-colors text-sm block">FAQ</a></li>
+                    <li><a href="{% url 'terms' %}" class="text-gray-400 hover:text-white transition-colors text-sm block">Mentions légales</a></li>
+                    <li><a href="{% url 'privacy' %}" class="text-gray-400 hover:text-white transition-colors text-sm block">Politique de confidentialité</a></li>
                 </ul>
             </div>
             
-            <div>
-                <h3 class="font-semibold mb-4">CATÉGORIES</h3>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Montres Homme</a></li>
-                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Montres Femme</a></li>
-                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Nouveautés</a></li>
-                </ul>
-            </div>
-            
-            <div>
-                <h3 class="font-semibold mb-4">CONTACT</h3>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Service client</a></li>
-                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Points de vente</a></li>
-                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
+            <!-- Colonne 3 : Contact -->
+            <div class="text-center md:text-left">
+                <h3 class="text-lg font-semibold mb-4 text-yellow-500">CONTACT</h3>
+                <ul class="space-y-2">
+                    <li class="flex items-center text-gray-400 text-sm justify-center md:justify-start">
+                        <i class="fas fa-map-marker-alt mr-3 text-yellow-500 w-4 text-center"></i>
+                        <span>123 Rue du Luxe, 75001 Paris</span>
+                    </li>
+                    <li class="flex items-center text-gray-400 text-sm justify-center md:justify-start">
+                        <i class="fas fa-phone-alt mr-3 text-yellow-500 w-4 text-center"></i>
+                        <span>+33 1 23 45 67 89</span>
+                    </li>
+                    <li class="flex items-center text-gray-400 text-sm justify-center md:justify-start">
+                        <i class="fas fa-envelope mr-3 text-yellow-500 w-4 text-center"></i>
+                        <span>contact@boutiluxe.com</span>
+                    </li>
                 </ul>
             </div>
         </div>
-
-        <!-- Réseaux sociaux -->
-        <div class="flex justify-center space-x-6 mb-8">
-            <a href="#" class="text-gray-400 hover:text-yellow-500 transition-colors">
-                <i class="fab fa-facebook-f"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-yellow-500 transition-colors">
-                <i class="fab fa-instagram"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-yellow-500 transition-colors">
-                <i class="fab fa-pinterest-p"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-yellow-500 transition-colors">
-                <i class="fab fa-youtube"></i>
-            </a>
+        
+        <!-- Troisième ligne : Catégories -->
+        <div class="border-t border-gray-800 pt-6 mb-6">
+            <div class="flex flex-wrap justify-center gap-4">
+                {% for category in categories %}
+                    <a href="{% url 'products_by_category' category.slug %}" 
+                       class="text-gray-400 hover:text-yellow-500 transition-colors text-sm">
+                        {{ category.name }}
+                    </a>
+                    {% if not forloop.last %}
+                        <span class="text-gray-600">•</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
         </div>
-
-        <!-- Copyright -->
-        <div class="border-t border-gray-800 pt-8 text-center">
-            <p class="text-gray-400 text-sm">
-                &copy; 2024 BOUTILUXE. Tous droits réservés.
-            </p>
+        
+        <!-- Quatrième ligne : Copyright -->
+        <div class="border-t border-gray-800 pt-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-500 text-sm text-center md:text-left mb-4 md:mb-0">
+                    &copy; 2024 BOUTILUXE. Tous droits réservés.
+                </p>
+                <div class="flex flex-wrap justify-center space-x-6">
+                    <a href="{% url 'terms' %}" class="text-gray-500 hover:text-white text-sm">Mentions légales</a>
+                    <a href="{% url 'privacy' %}" class="text-gray-500 hover:text-white text-sm">CGV</a>
+                </div>
+            </div>
         </div>
     </div>
 </footer>

@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from .models import Order, CustomerLead, Product, Review, Comment
+from django.core.validators import EmailValidator
 
 class CustomerForm(forms.Form):
     """Formulaire pour les informations client (utilisé pour les utilisateurs non connectés)."""
@@ -377,6 +378,48 @@ class CheckoutForm(forms.ModelForm):
     
 
 from .models_banner import VideoBanner
+
+class ContactForm(forms.Form):
+    """Formulaire de contact pour la page de contact."""
+    name = forms.CharField(
+        label='Votre nom',
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent',
+            'placeholder': 'Votre nom complet',
+            'required': 'required'
+        })
+    )
+    
+    email = forms.EmailField(
+        label='Votre email',
+        validators=[EmailValidator(message="Veuillez entrer une adresse email valide.")],
+        widget=forms.EmailInput(attrs={
+            'class': 'w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent',
+            'placeholder': 'votre@email.com',
+            'required': 'required'
+        })
+    )
+    
+    subject = forms.CharField(
+        label='Sujet',
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'class': 'w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent',
+            'placeholder': 'Objet de votre message',
+            'required': 'required'
+        })
+    )
+    
+    message = forms.CharField(
+        label='Votre message',
+        widget=forms.Textarea(attrs={
+            'class': 'w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-gold-500 focus:border-transparent',
+            'rows': 5,
+            'placeholder': 'Écrivez votre message ici...',
+            'required': 'required'
+        })
+    )
 
 class VideoBannerForm(forms.ModelForm):
     class Meta:

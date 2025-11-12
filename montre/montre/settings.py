@@ -25,13 +25,13 @@ SECRET_KEY = 'django-insecure-@%-$hu0w8x6_r(snxx)d*(o^$+2(sg6$r_h^y-4nckcw4x@sms
 
 # Administrateurs qui recevront les erreurs 500
 ADMINS = [
-    ('Admin', 'admin@example.com'),
+    ('Admin', 'hervewognin264@gmail.com'),
 ]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['boutiluxe.sajholding.org', 'localhost', '127.0.0.1', '*']
 
 
 # Application definition
@@ -156,24 +156,33 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = ['https://boutiluxe.sajholding.org']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 31536000  # 1 an
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
 
 # Configuration du site
 SITE_NAME = 'BOUTILUXE'
-SITE_URL = 'http://127.0.0.1:8000'
+SITE_URL = 'https://boutiluxe.sajholding.org'
+
+# Configuration Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'hervewognin264@gmail.com'  # Votre adresse Gmail
+EMAIL_HOST_PASSWORD = 'uejjvxiycejigxar'  # Mot de passe d'application généré pour Gmail
+DEFAULT_FROM_EMAIL = 'hervewognin264@gmail.com'  # Doit être le même que EMAIL_HOST_USER
+SERVER_EMAIL = 'hervewognin264@gmail.com'
 
 # Configuration SMS
 TEXTBEE_API_KEY = '039e2303-d77e-4efd-ac71-bb6b34576678'
 TEXTBEE_DEVICE_ID = '68a2df3cebcafab48db4cf8c'
 
-# Email settings
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # Remplacez par votre serveur SMTP
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'hervewognin264@gmail.com'  # Remplacez par votre email
-EMAIL_HOST_PASSWORD = 'uejjvxiycejigxar'  # Utilisez un mot de passe d'application pour Gmail
-DEFAULT_FROM_EMAIL = 'no-reply@luxurywatches.com'
-SERVER_EMAIL = 'hervewognin264@gmail.com'
+# Configuration Google Sheets
+GOOGLE_SHEETS_CREDENTIALS = os.path.join(BASE_DIR, 'config', 'service-account.json')  # Chemin vers votre fichier d'identification Google
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -201,3 +210,38 @@ if DEBUG:
 GOOGLE_SHEETS_SPREADSHEET_ID = '12hbIFuJ9QUzfNzjaNV9eXepmFXMUY5OtJI7-Gqr-63M'
 GOOGLE_API_KEY = 'AIzaSyCnBW-RhmTneSAqtHDFoV5rRKac6yAXbVo'
 
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'debug.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'app': {
+            'handlers': ['file', 'console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

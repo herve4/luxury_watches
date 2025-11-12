@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% load static %}{% block title %}Montres de Luxe - L'Art du Temps{% endblock %}</title>
+    <title>{% block title %}Montres de Luxe - L'Art du Temps{% endblock %}</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <!-- Tailwind CSS -->
@@ -71,7 +71,7 @@
         }
     </style>
 </head>
-<body class="bg-black text-white font-inter">
+<body class="bg-black text-white font-inter" data-is-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}">
     {% include 'includes/header.html' %}
     
     <main>
@@ -146,15 +146,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-function showErrorMessage(message) {
-    // Créer un message flottant
+function showToastMessage(message, type = 'error') {
+    // Créer un message flottant avec un style différent selon le type
     const toast = document.createElement('div');
-    toast.className = 'fixed top-4 right-4 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+    const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    
+    toast.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${bgColor} text-white transform transition-all duration-300 translate-x-full opacity-0`;
     toast.innerHTML = `
-        <div class="flex items-center space-x-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+        <div class="flex items-center">
+            <i class="fas ${icon} mr-2"></i>
             <span>${message}</span>
         </div>
     `;
@@ -162,17 +163,23 @@ function showErrorMessage(message) {
     document.body.appendChild(toast);
     
     // Animation d'entrée
-    setTimeout(() => {
-        toast.classList.remove('translate-x-full');
-    }, 100);
-    
-    // Supprimer après 5 secondes
-    setTimeout(() => {
-        toast.classList.add('translate-x-full');
+    requestAnimationFrame(() => {
         setTimeout(() => {
-            document.body.removeChild(toast);
-        }, 300);
-    }, 5000);
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            toast.classList.add('translate-x-0', 'opacity-100');
+            
+            // Supprimer le message après 5 secondes avec animation de sortie
+            setTimeout(() => {
+                toast.classList.remove('translate-x-0', 'opacity-100');
+                toast.classList.add('translate-x-full', 'opacity-0');
+                
+                // Supprimer l'élément après l'animation
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 5000);
+        }, 100);
+    });
 }
 </script>
 

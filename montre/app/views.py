@@ -1,6 +1,13 @@
 import json
 import logging
 from django.shortcuts import render, get_object_or_404, redirect
+from django.views.generic import TemplateView
+from django.http import JsonResponse
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from django.conf import settings
+import os
+from datetime import datetime
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView, FormView
 from django.urls import reverse_lazy, reverse
 from django.contrib import messages
@@ -18,10 +25,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import View
 from django.views.generic.detail import SingleObjectMixin
 from django.views.generic.edit import FormMixin
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login, authenticate
+from django.contrib.auth.forms import UserCreationForm
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils import timezone
 from django.db import transaction
+
+# Import des modèles
+from .models import Category, Product
+from .models_banner import VideoBanner
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -30,10 +42,27 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils.translation import gettext_lazy as _
+from django.core.mail import send_mail, BadHeaderError
+from django.http import HttpResponse
+from django.contrib import messages
 from .models import Product, ProductImage, Review, Comment
-from .forms import ReviewForm, CommentForm
+from .forms import ReviewForm, CommentForm, ContactForm
 from .serializers import ProductSerializer, ProductDetailSerializer
 from .models_banner import VideoBanner
+from .models_favorite import Favorite
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+
+# Vue pour la page À propos
+def about_view(request):
+    """
+    Affiche la page À propos avec des informations sur l'entreprise et l'équipe.
+    """
+    context = {
+        'title': 'À propos - BoutiLuxe',
+        'description': 'Découvrez l\'univers d\'exception de BoutiLuxe, où l\'art horloger rencontre l\'élégance intemporelle.',
+    }
+    return render(request, 'about.html', context)
 
 logger = logging.getLogger(__name__)
 
@@ -279,9 +308,13 @@ def landing_page(request):
         # Récupérer les produits en vedette
         featured_products = Product.objects.filter(is_featured=True)[:4]
         
+        # Récupérer toutes les catégories actives
+        categories = Category.objects.all()
+        
         # Initialiser le contexte
         context = {
             'featured_products': featured_products,
+            'categories': categories,
             'show_order_modal': False,
             'product': None,
             'order_started': order_started,
@@ -330,4 +363,336 @@ def voir_product(request, product_id):
     """Voir un produit"""
     product = get_object_or_404(Product, id=product_id)
     return render(request, 'components/voir_produit.html', {'product': product})
+
+# Vue pour la page de contact
+from django.core.mail import send_mail, BadHeaderError
+from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import redirect
+from .forms import ContactForm
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
+
+# Configuration Google Sheets
+SHEET_ID = '1I66Cnc3qCSktYL3bpc5xZKquS8SqubAZfUvOkMvVm1E'
+SHEET_NAME = 'contact boutiluxe'
+COLUMNS = {
+    'timestamp': 'Horodatage',
+    'name': 'Nom',
+    'email': 'Email',
+    'subject': 'Sujet',
+    'message': 'Message'
+}
+
+def faq_view(request):
+    """
+    Affiche la page FAQ avec les questions fréquemment posées.
+    """
+    faq_categories = [
+        {
+            'id': 'livraison',
+            'title': 'Livraison',
+            'icon': 'truck',
+            'questions': [
+                {
+                    'question': 'Quels sont les délais de livraison ?',
+                    'answer': 'Les commandes sont expédiées sous 24 à 48h ouvrées. Les délais de livraison varient selon la destination, généralement entre 2 et 5 jours ouvrés.'
+                },
+                {
+                    'question': 'Quels sont les frais de livraison ?',
+                    'answer': 'La livraison standard est offerte à partir de 200€ d\'achat. En dessous de ce montant, des frais de 9,90€ s\'appliquent.'
+                },
+                {
+                    'question': 'Livrez-vous à l\'international ?',
+                    'answer': 'Oui, nous livrons dans le monde entier. Les délais et frais de livraison varient en fonction de la destination.'
+                }
+            ]
+        },
+        {
+            'id': 'paiement',
+            'title': 'Paiement',
+            'icon': 'credit-card',
+            'questions': [
+                {
+                    'question': 'Quels moyens de paiement acceptez-vous ?',
+                    'answer': 'Nous acceptons les cartes bancaires (Visa, Mastercard, American Express), PayPal et virements bancaires.'
+                },
+                {
+                    'question': 'Le paiement est-il sécurisé ?',
+                    'answer': 'Oui, tous les paiements sont cryptés et sécurisés grâce à notre partenaire de paiement certifié PCI-DSS.'
+                },
+                {
+                    'question': 'Proposez-vous des facilités de paiement ?',
+                    'answer': 'Oui, nous proposons le paiement en plusieurs fois sans frais à partir de 300€ d\'achat.'
+                }
+            ]
+        },
+        {
+            'id': 'retours',
+            'title': 'Retours & Échanges',
+            'icon': 'exchange-alt',
+            'questions': [
+                {
+                    'question': 'Quelle est votre politique de retour ?',
+                    'answer': 'Vous disposez de 14 jours à compter de la réception de votre commande pour effectuer un retour. Les articles doivent être retournés dans leur état d\'origine, non portés et avec leur emballage d\'origine.'
+                },
+                {
+                    'question': 'Comment effectuer un retour ?',
+                    'answer': 'Connectez-vous à votre compte, allez dans la section "Mes commandes" et suivez la procédure de retour. Un bon de retour vous sera fourni à imprimer et à joindre à votre colis.'
+                }
+            ]
+        },
+        {
+            'id': 'garantie',
+            'title': 'Garantie',
+            'icon': 'shield-alt',
+            'questions': [
+                {
+                    'question': 'Quelle est la durée de la garantie ?',
+                    'answer': 'Toutes nos montres bénéficient d\'une garantie constructeur de 2 ans couvrant les défauts de fabrication.'
+                },
+                {
+                    'question': 'Que couvre la garantie ?',
+                    'answer': 'La garantie couvre les défauts de matériaux et de fabrication. Elle ne couvre pas les dommages dus à une mauvaise utilisation, un choc ou un manque d\'entretien.'
+                }
+            ]
+        }
+    ]
     
+    context = {
+        'title': 'Foire aux questions',
+        'description': 'Trouvez les réponses aux questions les plus fréquemment posées sur nos produits et services.',
+        'faq_categories': faq_categories
+    }
+    return render(request, 'faq.html', context)
+
+@require_http_methods(["POST"])
+def toggle_favorite(request, product_id):
+    """
+    Ajoute ou supprime un produit des favoris de l'utilisateur.
+    Gère à la fois les utilisateurs connectés (base de données) et non connectés (session).
+    """
+    try:
+        # Vérification de la requête AJAX
+        if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            logger.warning('Tentative d\'accès non-AJAX à toggle_favorite')
+            return JsonResponse({'status': 'error', 'message': 'Requête invalide'}, status=400)
+
+        # Récupération du produit
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            logger.error(f'Produit non trouvé avec l\'ID: {product_id}')
+            return JsonResponse({'status': 'error', 'message': 'Produit non trouvé'}, status=404)
+        
+        # Initialisation de la réponse
+        response_data = {'status': 'success'}
+        
+        if request.user.is_authenticated:
+            # Gestion pour les utilisateurs connectés
+            try:
+                favorite, created = Favorite.objects.get_or_create(
+                    user=request.user,
+                    product=product
+                )
+
+                if not created:
+                    favorite.delete()
+                    response_data['is_favorite'] = False
+                    logger.info(f'Produit {product_id} retiré des favoris de l\'utilisateur {request.user.id}')
+                else:
+                    response_data['is_favorite'] = True
+                    logger.info(f'Produit {product_id} ajouté aux favoris de l\'utilisateur {request.user.id}')
+                    
+            except Exception as e:
+                logger.error(f'Erreur lors de la gestion des favoris: {str(e)}')
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Une erreur est survenue lors de la mise à jour des favoris'
+                }, status=500)
+        else:
+            # Gestion pour les utilisateurs non connectés (session)
+            try:
+                # Initialiser la liste des favoris si elle n'existe pas
+                if 'favorites' not in request.session:
+                    request.session['favorites'] = []
+                
+                favorites = request.session['favorites']
+                product_id_str = str(product_id)
+                
+                # Vérifier si le produit est déjà dans les favoris
+                if product_id_str in favorites:
+                    favorites.remove(product_id_str)
+                    response_data['is_favorite'] = False
+                    logger.info(f'Produit {product_id} retiré des favoris de session')
+                else:
+                    favorites.append(product_id_str)
+                    response_data['is_favorite'] = True
+                    logger.info(f'Produit {product_id} ajouté aux favoris de session')
+                
+                # Sauvegarder explicitement la session
+                request.session.modified = True
+                
+            except Exception as e:
+                logger.error(f'Erreur lors de la gestion des favoris de session: {str(e)}')
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Erreur lors de la mise à jour des favoris de session'
+                }, status=500)
+
+        # Récupération du nombre total de likes (uniquement pour les utilisateurs connectés)
+        try:
+            response_data['likes_count'] = product.favorited_by.count()
+        except Exception as e:
+            logger.error(f'Erreur lors du comptage des favoris: {str(e)}')
+            response_data['likes_count'] = 0
+
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        # Gestion des erreurs inattendues
+        logger.exception('Erreur inattendue dans toggle_favorite')
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Une erreur inattendue est survenue'
+        }, status=500)
+
+def terms_view(request):
+    """
+    Affiche la page des conditions d'utilisation.
+    """
+    context = {
+        'title': 'Conditions d\'utilisation',
+        'last_updated': timezone.now(),
+    }
+    return render(request, 'legal/terms.html', context)
+
+def privacy_view(request):
+    """
+    Affiche la page de politique de confidentialité.
+    """
+    return render(request, 'legal/privacy.html')
+
+def register_view(request):
+    """
+    Vue pour l'inscription des utilisateurs.
+    """
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Connecter automatiquement l'utilisateur après l'inscription
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                # Rediriger vers la page d'accueil ou la page précédente
+                next_url = request.POST.get('next', '/')
+                return redirect(next_url)
+    else:
+        form = UserCreationForm()
+    
+    return render(request, 'registration/register.html', {'form': form})
+
+def contact_view(request):
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            # Récupération des données du formulaire
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+            subject = form.cleaned_data['subject']
+            message = form.cleaned_data['message']
+            
+            # Construction du message
+            email_message = f"""
+            Nouveau message de contact depuis le site BoutiLuxe
+            
+            Nom: {name}
+            Email: {email}
+            
+            Sujet: {subject}
+            
+            Message:
+            {message}
+            """
+            
+            try:
+                # Envoi de l'email
+                send_mail(
+                    f"Nouveau message de contact: {subject}",
+                    email_message,
+                    settings.DEFAULT_FROM_EMAIL,  # Utiliser l'email du serveur comme expéditeur
+                    [settings.DEFAULT_FROM_EMAIL],  # À l'administrateur
+                    fail_silently=False,
+                )
+                
+                # Ajout des données dans Google Sheets
+                try:
+                    # Configuration de l'authentification
+                    scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+                    creds = ServiceAccountCredentials.from_json_keyfile_name(settings.GOOGLE_SHEETS_CREDENTIALS, scope)
+                    client = gspread.authorize(creds)
+                    
+                    # Ouverture de la feuille
+                    sheet = client.open_by_key('1I66Cnc3qCSktYL3bpc5xZKquS8SqubAZfUvOkMvVm1E').worksheet('contact boutiluxe')
+                    
+                    # Préparation des données à ajouter
+                    row = [
+                        datetime.now().strftime('%Y-%m-%d %H:%M:%S'),  # Horodatage
+                        name,
+                        email,
+                        subject,
+                        message
+                    ]
+                    
+                    # Ajout de la nouvelle ligne
+                    sheet.append_row(row)
+                    
+                except Exception as e:
+                    # En cas d'erreur avec Google Sheets, on continue car l'email a déjà été envoyé
+                    logger.error(f"Erreur Google Sheets: {str(e)}")
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Votre message a été envoyé avec succès !',
+                        'type': 'success'
+                    }, status=200)
+                    
+                messages.success(request, 'Votre message a été envoyé avec succès !')
+                return redirect('index')
+                
+            except Exception as e:
+                logger.error(f"Erreur envoi email: {str(e)}")
+                error_message = f"Une erreur est survenue lors de l'envoi du message. Veuillez réessayer plus tard."
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'message': error_message,
+                        'type': 'error'
+                    }, status=500)
+                messages.error(request, error_message)
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                errors = {field: [str(error) for error in error_list] for field, error_list in form.errors.items()}
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Veuillez corriger les erreurs dans le formulaire.',
+                    'errors': errors,
+                    'type': 'error'
+                }, status=400)
+    else:
+        form = ContactForm()
+    
+    # Si c'est une requête AJAX mais qu'il y a eu une erreur, on renvoie une réponse JSON
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': False,
+            'message': 'Méthode non autorisée ou erreur de requête.',
+            'type': 'error'
+        }, status=405)
+        
+    return render(request, 'contact.html', {'form': form})

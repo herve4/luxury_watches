@@ -8,6 +8,7 @@ from .models import (
     Category, SubCategory, ProductImage, 
     CustomerLead, Order, Review, Comment
 )
+from .models_favorite import Favorite
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 
@@ -481,5 +482,16 @@ class VideoBannerAdmin(admin.ModelAdmin):
     preview_buttons.short_description = "Éléments actifs"
 
 # Personnalisation du header de l'admin
-admin.site.site_header = "Administration TEMPORIS - Montres de Luxe"
-admin.site.index_title = "Tableau de bord des montres de luxe"
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ['user', 'product', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['user__username', 'product__name']
+    list_select_related = ['user', 'product']
+    date_hierarchy = 'created_at'
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user', 'product')
+
+admin.site.site_header = "Tableau de bord - BoutiLuxe"
+admin.site.index_title = "Tableau de bord BoutiLuxe"

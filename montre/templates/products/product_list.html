@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="padding-top: 4rem;">
         <!-- En-tête avec fil d'Ariane et filtres -->
         <div class="border-b border-gray-200 py-6">
             <div class="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -18,8 +18,8 @@
                     {% endif %}
                 </h1>
                 
-                <div class="mt-4 md:mt-0 flex items-center
-                            <div class="relative inline-block text-left">
+                <div class="mt-4 md:mt-0 flex items-center">
+                    <div class="relative inline-block text-left">
                     <div>
                         <button type="button" 
                                 class="group inline-flex justify-center text-sm font-medium text-gray-700 hover:text-gray-900" 
@@ -36,23 +36,40 @@
                             </svg>
                         </button>
                     </div>
+                </div>
 
-                    <div id="sort-menu" class="hidden absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none" 
+                <div id="sort-menu" class="hidden absolute right-0 z-10 mt-2 w-40 origin-top-right rounded-md bg-white shadow-2xl ring-1 ring-black ring-opacity-5 focus:outline-none" 
                          role="menu" 
                          aria-orientation="vertical" 
                          aria-labelledby="menu-button" 
                          tabindex="-1">
                         <div class="py-1" role="none">
-                            <a href="?sort=price_asc" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="menu-item-0">
+                            <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.price %}price={{ request.GET.price }}&{% endif %}sort=price_asc" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {% if current_sort == 'price_asc' %}bg-gray-50{% endif %}" 
+                               role="menuitem" 
+                               tabindex="-1" 
+                               id="menu-item-0">
                                 Prix croissant
                             </a>
-                            <a href="?sort=price_desc" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="menu-item-1">
+                            <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.price %}price={{ request.GET.price }}&{% endif %}sort=price_desc" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {% if current_sort == 'price_desc' %}bg-gray-50{% endif %}" 
+                               role="menuitem" 
+                               tabindex="-1" 
+                               id="menu-item-1">
                                 Prix décroissant
                             </a>
-                            <a href="?sort=newest" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="menu-item-2">
+                            <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.price %}price={{ request.GET.price }}&{% endif %}sort=newest" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {% if current_sort == 'newest' %}bg-gray-50{% endif %}" 
+                               role="menuitem" 
+                               tabindex="-1" 
+                               id="menu-item-2">
                                 Nouveautés
                             </a>
-                            <a href="?sort=popular" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem" tabindex="-1" id="menu-item-3">
+                            <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.price %}price={{ request.GET.price }}&{% endif %}sort=popular" 
+                               class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 {% if current_sort == 'popular' %}bg-gray-50{% endif %}" 
+                               role="menuitem" 
+                               tabindex="-1" 
+                               id="menu-item-3">
                                 Les plus populaires
                             </a>
                         </div>
@@ -61,36 +78,30 @@
             </div>
 
             <!-- Filtres actifs -->
+            {% if active_filters %}
             <div class="mt-4">
                 <div class="flex flex-wrap gap-2">
-                    {% if request.GET.sort %}
+                    {% for filter in active_filters %}
                     <span class="inline-flex items-center rounded-full bg-gray-100 py-1.5 pl-3 pr-2 text-sm font-medium text-gray-700">
-                        {% if request.GET.sort == 'price_asc' %}Prix croissant{% endif %}
-                        {% if request.GET.sort == 'price_desc' %}Prix décroissant{% endif %}
-                        {% if request.GET.sort == 'newest' %}Nouveautés{% endif %}
-                        {% if request.GET.sort == 'popular' %}Populaires{% endif %}
-                        <button type="button" class="ml-1.5 inline-flex h-4 w-4 flex-shrink-0 rounded-full p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-500">
-                            <span class="sr-only">Supprimer le filtre</span>
-                            <svg class="h-2 w-2" fill="currentColor" viewBox="0 0 8 8">
-                                <path d="M1.293 1.293a1 1 0 0 1 1.414 0L4 2.586l1.293-1.293a1 1 0 1 1 1.414 1.414L5.414 4l1.293 1.293a1 1 0 0 1-1.414 1.414L4 5.414l-1.293 1.293a1 1 0 0 1-1.414-1.414L2.586 4 1.293 2.707a1 1 0 0 1 0-1.414z"/>
-                            </svg>
-                        </button>
-                    </span>
-                    {% endif %}
-                    
-                    {% if request.GET.q %}
-                    <span class="inline-flex items-center rounded-full bg-gray-100 py-1.5 pl-3 pr-2 text-sm font-medium text-gray-700">
-                        Recherche : {{ request.GET.q }}
-                        <a href="?{% if request.GET.sort %}sort={{ request.GET.sort }}{% endif %}" class="ml-1.5 inline-flex h-4 w-4 flex-shrink-0 rounded-full p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-500">
+                        {{ filter.name|capfirst }}: {{ filter.value }}
+                        <a href="?{% for key, value in request.GET.items %}{% if key != filter.url_param %}{{ key }}={{ value }}&{% endif %}{% endfor %}" 
+                           class="ml-1.5 inline-flex h-4 w-4 flex-shrink-0 rounded-full p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-500">
                             <span class="sr-only">Supprimer le filtre</span>
                             <svg class="h-2 w-2" fill="currentColor" viewBox="0 0 8 8">
                                 <path d="M1.293 1.293a1 1 0 0 1 1.414 0L4 2.586l1.293-1.293a1 1 0 1 1 1.414 1.414L5.414 4l1.293 1.293a1 1 0 0 1-1.414 1.414L4 5.414l-1.293 1.293a1 1 0 0 1-1.414-1.414L2.586 4 1.293 2.707a1 1 0 0 1 0-1.414z"/>
                             </svg>
                         </a>
                     </span>
+                    {% endfor %}
+                    
+                    {% if active_filters %}
+                    <a href="?" class="inline-flex items-center rounded-full bg-gray-200 py-1.5 px-3 text-sm font-medium text-gray-700 hover:bg-gray-300">
+                        <span>Effacer tous les filtres</span>
+                    </a>
                     {% endif %}
                 </div>
             </div>
+            {% endif %}
         </div>
 
         <!-- Contenu principal -->
@@ -100,7 +111,7 @@
                 <h2 class="sr-only">Filtres</h2>
                 
                 <!-- Recherche -->
-                <div class="border-b border-gray-200 py-6">
+                <form method="get" action="{% url 'product_list' %}" id="search-form" class="border-b border-gray-200 py-6">
                     <h3 class="-my-3 flow-root">
                         <button type="button" 
                                 class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500" 
@@ -118,8 +129,9 @@
                         <div class="space-y-4">
                             <div class="relative">
                                 <input type="text" 
+                                       id="search-input"
                                        name="q" 
-                                       value="{{ request.GET.q }}" 
+                                       value="{{ current_query }}" 
                                        placeholder="Rechercher un produit..."
                                        class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-gold-600 sm:text-sm sm:leading-6">
                                 <button type="submit" class="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -128,9 +140,28 @@
                                     </svg>
                                 </button>
                             </div>
+                            
+                            <!-- Champs cachés pour préserver les autres filtres -->
+                            {% if current_status %}
+                                <input type="hidden" name="status" value="{{ current_status }}">
+                            {% endif %}
+                            
+                            {% if current_price %}
+                                <input type="hidden" name="price" value="{{ current_price }}">
+                            {% endif %}
+                            
+                            {% if current_sort %}
+                                <input type="hidden" name="sort" value="{{ current_sort }}">
+                            {% endif %}
+                            
+                            <!-- <div class="pt-2">
+                                <button type="submit" class="w-full bg-gold-600 text-white py-2 px-4 rounded-md hover:bg-gold-700 transition-colors">
+                                    Rechercher
+                                </button>
+                            </div> -->
                         </div>
                     </div>
-                </div>
+                </form>
                 
                 <!-- Catégories -->
                 <div class="border-b border-gray-200 py-6">
@@ -151,7 +182,7 @@
                         <div class="space-y-4">
                             {% for cat in categories %}
                             <div class="flex items-center">
-                                <a href="{% url 'product_list_by_category' category_slug=cat.slug %}" 
+                                <a href="{% url 'products_by_category' slug=cat.slug %}" 
                                    class="text-gray-600 hover:text-gray-800 {% if category and category.slug == cat.slug %}font-medium text-gold-600{% endif %}">
                                     {{ cat.name }}
                                     <span class="text-xs text-gray-500 ml-1">({{ cat.products.count }})</span>
@@ -277,106 +308,26 @@
             <!-- Liste des produits -->
             <div class="mt-6 lg:col-span-3 lg:mt-0">
                 {% if products %}
-                <div class="grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10 lg:grid-cols-3 lg:gap-x-8">
-                    {% for product in products %}
-                    <div class="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
-                        <!-- Badges -->
-                        <div class="absolute top-2 right-2 z-10 flex flex-col space-y-1">
-                            {% if product.is_new %}
-                            <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
-                                Nouveau
-                            </span>
-                            {% endif %}
-                            {% if product.is_bestseller %}
-                            <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
-                                Best-seller
-                            </span>
-                            {% endif %}
-                            {% if product.is_featured %}
-                            <span class="inline-flex items-center rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-medium text-pink-800">
-                                En vedette
-                            </span>
-                            {% endif %}
-                        </div>
-                        
-                        <!-- Image du produit -->
-                        <div class="aspect-w-3 aspect-h-4 bg-gray-200 group-hover:opacity-75 sm:aspect-none sm:h-64">
-                            {% with product.images.first as image %}
-                                {% if image %}
-                                    <img src="{{ image.image.url }}" 
-                                         alt="{{ image.alt_text|default:product.name }}" 
-                                         class="h-full w-full object-cover object-center sm:h-full sm:w-full">
-                                {% else %}
-                                    <div class="h-full w-full flex items-center justify-center bg-gray-100">
-                                        <span class="text-gray-400">Aucune image</span>
-                                    </div>
-                                {% endif %}
-                            {% endwith %}
-                        </div>
-                        
-                        <!-- Détails du produit -->
-                        <div class="flex flex-1 flex-col space-y-2 p-4">
-                            <h3 class="text-sm font-medium text-gray-900">
-                                <a href="{% url 'product_detail' slug=product.slug %}">
-                                    <span aria-hidden="true" class="absolute inset-0"></span>
-                                    {{ product.name }}
-                                </a>
-                            </h3>
-                            
-                            <!-- Note et avis -->
-                            <div class="flex items-center">
-                                <div class="flex items-center">
-                                    {% for i in "12345" %}
-                                        {% if forloop.counter <= product.average_rating|default:0 %}
-                                            <svg class="h-4 w-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                            </svg>
-                                        {% else %}
-                                            <svg class="h-4 w-4 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                            </svg>
-                                        {% endif %}
-                                    {% endfor %}
-                                    <span class="ml-1 text-xs text-gray-500">
-                                        ({{ product.reviews.count }})
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <!-- Prix -->
-                            <div class="flex items-baseline">
-                                <p class="text-lg font-bold text-gray-900">{{ product.price|floatformat:0 }} FCFA</p>
-                                {% if product.old_price %}
-                                <p class="ml-2 text-sm text-gray-500 line-through">{{ product.old_price|floatformat:0 }} FCFA</p>
-                                {% endif %}
-                            </div>
-                            
-                            <!-- Boutons d'action -->
-                            <div class="mt-auto flex space-x-2">
-                                <a href="#" 
-                                   class="flex-1 bg-gold-600 hover:bg-gold-700 text-white py-2 px-4 rounded-md text-sm font-medium text-center transition-colors">
-                                    Acheter
-                                </a>
-                                <button type="button" 
-                                        class="inline-flex items-center justify-center rounded-md bg-white p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gold-500">
-                                    <span class="sr-only">Ajouter au panier</span>
-                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
+                <div class="grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+                    {% include 'products/partials/product_list.html' %}
                 </div>
+                {% else %}
+                <div class="text-center py-12">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun produit trouvé</h3>
+                    <p class="mt-1 text-sm text-gray-500">Essayez d'ajuster vos filtres de recherche.</p>
+                </div>
+                {% endif %}
                 
                 <!-- Pagination -->
                 {% if is_paginated %}
                 <nav class="mt-8 flex items-center justify-between border-t border-gray-200 px-4 sm:px-0">
                     <div class="-mt-px flex w-0 flex-1">
                         {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
-                           class="inline-flex items-center border-t-2 border-transparent pt-4 pr-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
+                        <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.price %}price={{ request.GET.price }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}&{% endif %}page={{ page_obj.previous_page_number }}" 
+                           class="pagination-link inline-flex items-center border-t-2 border-transparent pr-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
                             <svg class="mr-3 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M18 10a.75.75 0 01-.75.75H4.66l2.1 1.95a.75.75 0 11-1.02 1.1l-3.5-3.25a.75.75 0 010-1.1l3.5-3.25a.75.75 0 111.02 1.1l-2.1 1.95h12.59A.75.75 0 0118 10z" clip-rule="evenodd" />
                             </svg>
@@ -387,21 +338,19 @@
                     <div class="hidden md:-mt-px md:flex">
                         {% for i in page_obj.paginator.page_range %}
                             {% if page_obj.number == i %}
-                            <a href="#" class="inline-flex items-center border-t-2 border-gold-500 px-4 pt-4 text-sm font-medium text-gold-600" aria-current="page">
-                                {{ i }}
-                            </a>
+                            <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.price %}price={{ request.GET.price }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}&{% endif %}page={{ i }}" 
+                               class="pagination-link inline-flex items-center border-t-2 border-gold-500 px-4 pt-4 text-sm font-medium text-gold-600" 
+                               aria-current="page">{{ i }}</a>
                             {% else %}
-                            <a href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
-                               class="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
-                                {{ i }}
-                            </a>
+                            <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.price %}price={{ request.GET.price }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}&{% endif %}page={{ i }}" 
+                               class="pagination-link inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">{{ i }}</a>
                             {% endif %}
                         {% endfor %}
                     </div>
                     <div class="-mt-px flex w-0 flex-1 justify-end">
                         {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}" 
-                           class="inline-flex items-center border-t-2 border-transparent pt-4 pl-1 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
+                        <a href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.status %}status={{ request.GET.status }}&{% endif %}{% if request.GET.price %}price={{ request.GET.price }}&{% endif %}{% if request.GET.sort %}sort={{ request.GET.sort }}&{% endif %}page={{ page_obj.next_page_number }}" 
+                           class="pagination-link inline-flex items-center border-t-2 border-transparent pl-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
                             Suivant
                             <svg class="ml-3 h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fill-rule="evenodd" d="M2 10a.75.75 0 01.75-.75h12.59l-2.1-1.95a.75.75 0 111.02-1.1l3.5 3.25a.75.75 0 010 1.1l-3.5 3.25a.75.75 0 11-1.02-1.1l2.1-1.95H2.75A.75.75 0 012 10z" clip-rule="evenodd" />
@@ -411,24 +360,6 @@
                     </div>
                 </nav>
                 {% endif %}
-                
-                {% else %}
-                <div class="text-center py-12">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                        <path vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun produit trouvé</h3>
-                    <p class="mt-1 text-sm text-gray-500">Essayez de modifier vos critères de recherche ou de filtrage.</p>
-                    <div class="mt-6">
-                        <a href="{% url 'product_list' %}" class="inline-flex items-center rounded-md bg-gold-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gold-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-600">
-                            <svg class="-ml-0.5 mr-1.5 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd" />
-                            </svg>
-                            Réinitialiser les filtres
-                        </a>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -437,8 +368,309 @@
 
 {% block extra_js %}
 <script>
-// Script pour les filtres dépliables
+// Fonction pour ajouter/supprimer un produit des favoris
+function toggleFavorite(productId, button) {
+    console.log('toggleFavorite appelé avec productId:', productId);
+    // Vérifier si l'utilisateur est connecté
+    const isAuthenticated = document.body.getAttribute('data-is-authenticated') === 'true';
+    console.log('Utilisateur authentifié:', isAuthenticated);
+    
+    // Si l'utilisateur n'est pas connecté, afficher la modale de connexion
+    if (!isAuthenticated) {
+        console.log('Utilisateur non connecté, affichage de la modale');
+        if (typeof window.showLoginModal === 'function') {
+            window.showLoginModal();
+        } else {
+            console.error('showLoginModal is not defined');
+            // Rediriger vers la page de connexion en cas d'échec
+            window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+        }
+        return false;
+    }
+    
+    const url = `/products/${productId}/toggle-favorite/`;
+    console.log('URL de la requête:', url);
+    const csrftoken = getCookie('csrftoken');
+    console.log('Token CSRF:', csrftoken ? 'présent' : 'absent');
+    const heartIcon = document.getElementById(`favorite-${productId}`);
+    console.log('Élément heartIcon trouvé:', heartIcon !== null);
+    const likeCount = document.getElementById(`like-count-${productId}`);
+    console.log('Élément likeCount trouvé:', likeCount !== null);
+    
+    // Désactiver le bouton pendant la requête
+    const originalHTML = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="loading loading-spinner loading-xs"></span>';
+    
+    console.log('Envoi de la requête AJAX...');
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        console.log('Réponse reçue, statut:', response.status);
+        if (!response.ok) {
+            return response.json().then(err => { 
+                // Si la réponse est du JSON mais avec un statut d'erreur
+                if (err && err.message) {
+                    throw new Error(err.message);
+                } else {
+                    throw new Error('Une erreur est survenue lors de la mise à jour des favoris');
+                }
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Données reçues du serveur:', data);
+        if (data.status === 'success') {
+            // Mettre à jour l'icône de cœur
+            const isFavorite = data.is_favorite;
+            console.log('Nouvel état du favori:', isFavorite);
+            
+            // Mise à jour du style de l'icône
+            console.log('Mise à jour du style de l\'icône, isFavorite:', isFavorite);
+            
+            if (isFavorite) {
+                heartIcon.classList.remove('text-gray-300', 'fill-none');
+                heartIcon.classList.add('text-red-500', 'fill-current');
+                console.log('Classes après ajout:', heartIcon.className);
+            } else {
+                heartIcon.classList.remove('text-red-500', 'fill-current');
+                heartIcon.classList.add('text-gray-300', 'fill-none');
+                console.log('Classes après suppression:', heartIcon.className);
+            }
+            
+            console.log('Classes après mise à jour:', heartIcon.className);
+            console.log('Fill après mise à jour:', heartIcon.getAttribute('fill'));
+            
+            // Mettre à jour le compteur avec la valeur du serveur
+            if (data.likes_count !== undefined) {
+                likeCount.textContent = data.likes_count;
+                console.log('Compteur de likes mis à jour:', data.likes_count);
+            }
+        } else if (data.status === 'error' && data.message) {
+            // Afficher le message d'erreur du serveur
+            showToast(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur lors de la mise à jour des favoris:', error);
+        // Afficher un message d'erreur à l'utilisateur
+        showToast(error.message || 'Une erreur est survenue lors de la mise à jour des favoris', 'error');
+    })
+    .finally(() => {
+        // Réactiver le bouton
+        button.disabled = false;
+        button.innerHTML = originalHTML;
+        console.log('Bouton réactivé');
+    });
+    
+    console.log('Fin de la fonction toggleFavorite');
+}
+
+// Fonction utilitaire pour afficher des notifications
+function showToast(message, type = 'info') {
+    // Vérifier si une notification existe déjà
+    let toast = document.getElementById('toast-notification');
+    if (!toast) {
+        // Créer la notification si elle n'existe pas
+        toast = document.createElement('div');
+        toast.id = 'toast-notification';
+        toast.className = 'fixed bottom-4 right-4 z-50 max-w-xs';
+        document.body.appendChild(toast);
+    }
+    
+    // Créer le contenu de la notification
+    const toastContent = document.createElement('div');
+    toastContent.className = `p-4 rounded-lg shadow-lg ${type === 'error' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`;
+    toastContent.textContent = message;
+    
+    // Ajouter la notification
+    toast.innerHTML = '';
+    toast.appendChild(toastContent);
+    
+    // Supprimer la notification après 5 secondes
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
+
+// Fonction utilitaire pour récupérer le token CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Initialisation des gestionnaires d'événements pour les boutons de favoris
 document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.favorite-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            console.log('Bouton cliqué, productId:', productId);
+            toggleFavorite(productId, this);
+        });
+    });
+});
+
+// Script pour la recherche en temps réel, la pagination AJAX et les filtres dépliables
+document.addEventListener('DOMContentLoaded', function() {
+    // Éléments de recherche
+    const searchInput = document.getElementById('search-input');
+    const searchForm = document.getElementById('search-form');
+    const productsGrid = document.querySelector('.grid.grid-cols-1');
+    const productsContainer = document.querySelector('.mt-6.lg\:col-span-3');
+    let searchTimeout;
+    
+    // Vérifier si les éléments nécessaires existent
+    if (!productsGrid) {
+        console.error('La grille des produits n\'a pas été trouvée');
+        return;
+    }
+
+    // Fonction pour effectuer la recherche
+    function performSearch(url) {
+        // Afficher un indicateur de chargement
+        if (productsGrid) {
+            const originalContent = productsGrid.innerHTML;
+            productsGrid.innerHTML = `
+                <div class="col-span-full flex justify-center py-12">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                </div>`;
+            
+            // Effectuer la requête AJAX
+            const fetchUrl = new URL(url, window.location.origin);
+            
+            // S'assurer que le paramètre X-Requested-With est bien envoyé
+            fetch(fetchUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html'
+                },
+                credentials: 'same-origin' // Important pour les cookies de session
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur réseau');
+                }
+                return response.text();
+            })
+            .then(html => {
+                // Mettre à jour l'URL sans recharger la page
+                window.history.pushState({}, '', fetchUrl);
+                
+                // Mettre à jour uniquement la grille des produits
+                if (productsGrid) {
+                    // Créer un élément temporaire pour parser le HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    
+                    // Extraire le contenu de la grille de produits
+                    const newGrid = tempDiv.querySelector('.grid.grid-cols-1');
+                    if (newGrid) {
+                        productsGrid.innerHTML = newGrid.innerHTML;
+                    } else {
+                        // Si la réponse ne contient pas de grille, utiliser tout le contenu
+                        productsGrid.innerHTML = html;
+                    }
+                }
+                
+                // Ajouter les écouteurs d'événements aux nouveaux liens de pagination
+                setupPaginationLinks();
+            })
+            .catch(error => {
+                console.error('Erreur lors de la recherche:', error);
+                if (productsGrid) {
+                    productsGrid.innerHTML = originalContent;
+                }
+            });
+        }
+    }
+
+    // Fonction pour configurer les écouteurs d'événements de pagination
+    function setupPaginationLinks() {
+        const paginationLinks = document.querySelectorAll('.pagination-link');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.getAttribute('href');
+                if (url) {
+                    performSearch(url);
+                    // Faire défiler vers le haut de la liste des produits
+                    if (productsContainer) {
+                        productsContainer.scrollIntoView({ behavior: 'smooth' });
+                    }
+                }
+            });
+        });
+    }
+
+    // Configuration initiale des écouteurs de pagination
+    document.addEventListener('DOMContentLoaded', function() {
+        setupPaginationLinks();
+
+        // Gestion de la recherche en temps réel
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            searchTimeout = setTimeout(() => {
+                const url = new URL(window.location.href);
+                
+                // Mettre à jour le paramètre de recherche
+                if (query) {
+                    url.searchParams.set('q', query);
+                } else {
+                    url.searchParams.delete('q');
+                }
+                
+                // Réinitialiser la pagination
+                url.searchParams.set('page', '1');
+                
+                // Effectuer la recherche
+                performSearch(url.toString());
+            }, 300);
+        });
+    }
+
+    // Empêcher la soumission du formulaire
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const query = searchInput ? searchInput.value.trim() : '';
+            const url = new URL(window.location.href);
+            if (query) {
+                url.searchParams.set('q', query);
+            } else {
+                url.searchParams.delete('q');
+            }
+            // Réinitialiser la pagination à la première page lors d'une nouvelle recherche
+            url.searchParams.set('page', '1');
+            performSearch(url.toString());
+        });
+    }
+
+    // Gérer les boutons de navigation arrière/avant
+    window.addEventListener('popstate', function() {
+        performSearch(window.location.href);
+    });
+
     // Gestion des boutons de filtre
     const filterButtons = document.querySelectorAll('[aria-controls^="filter-section-"]');
     
@@ -456,27 +688,93 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (target.style.display === 'none' || !target.style.display) {
                     target.style.display = 'block';
                     button.setAttribute('aria-expanded', 'true');
-                    button.querySelector('svg').classList.add('rotate-45');
+                    const svg = button.querySelector('svg');
+                    if (svg) {
+                        svg.classList.add('rotate-45');
+                    }
                 } else {
                     target.style.display = 'none';
                     button.setAttribute('aria-expanded', 'false');
-                    button.querySelector('svg').classList.remove('rotate-45');
+                    const svg = button.querySelector('svg');
+                    if (svg) {
+                        svg.classList.remove('rotate-45');
+                    }
                 }
             }
         });
     });
     
-    // Gestion de la soumission du formulaire de recherche
-    const searchForm = document.querySelector('input[name="q"]')?.closest('form');
-    if (searchForm) {
-        searchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const searchValue = this.querySelector('input[name="q"]').value;
-            const url = new URL(window.location.href);
-            url.searchParams.set('q', searchValue);
-            window.location.href = url.toString();
-        });
+        // Configuration initiale
+    setupPaginationLinks();
+    });
+});
+
+// Déclarer les fonctions globales au niveau de la fenêtre
+window.showLoginModal = function() {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Empêcher le défilement
+    } else {
+        console.error('Élément loginModal non trouvé');
+    }
+};
+
+window.closeModal = function() {
+    const modal = document.getElementById('loginModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = ''; // Rétablir le défilement
+    }
+};
+
+// Gestion du clic en dehors de la modale
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('loginModal');
+    if (event.target === modal) {
+        closeModal();
     }
 });
 </script>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- Modale de connexion/inscription -->
+<div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Connexion requise</h2>
+            <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <p class="text-gray-600 mb-6">Connectez-vous pour ajouter ce produit à vos favoris et profiter d'une expérience personnalisée.</p>
+        
+        <div class="space-y-4">
+            <a href="{% url 'login' %}?next={{ request.path }}" 
+               class="block w-full text-center px-4 py-2 bg-gold-600 text-white rounded-md hover:bg-gold-700 transition-colors">
+                Se connecter
+            </a>
+            
+            <p class="text-center text-gray-600">ou</p>
+            
+            <a href="#" 
+               class="block w-full text-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors">
+                Créer un compte
+            </a>
+        </div>
+        
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <p class="text-sm text-gray-600 text-center">
+                En continuant, vous acceptez nos 
+                <a href="{% url 'terms' %}" class="text-gold-600 hover:underline">Conditions d'utilisation</a> 
+                et notre 
+                <a href="{% url 'privacy' %}" class="text-gold-600 hover:underline">Politique de confidentialité</a>.
+            </p>
+        </div>
+    </div>
+</div>
 {% endblock %}

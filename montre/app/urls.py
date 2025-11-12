@@ -1,22 +1,22 @@
-from django.urls import path
-from .views import capture_lead, landing_page, product_detail_page, add_review, add_comment, voir_product
+from django.urls import path, include
+from django.contrib.auth import views as auth_views
+from .views import capture_lead, landing_page, product_detail_page, add_review, add_comment, voir_product, contact_view, about_view, faq_view, toggle_favorite, terms_view, privacy_view, register_view
 from .views_orders import OrderCreateView, OrderDetailView, OrderListView, OrderSuccessView
-from .views_products import ProductListView
+from .views_products import ProductListView, product_detail, products_by_category
 from django.conf import settings
 from django.conf.urls.static import static
-from .views_products import product_detail
 
 urlpatterns = [
     # Pages principales
     path('', landing_page, name='index'),
-    path('contact/', landing_page, name='contact'),  # À implémenter
-    path('a-propos/', landing_page, name='about'),  # À implémenter
+    path('contact/', contact_view, name='contact'),
+    path('a-propos/', about_view, name='about'),
+    path('faq/', faq_view, name='faq'),
     
     # Produits
     path('boutique/', ProductListView.as_view(), name='product_list'),
-    path('boutique/categorie/<slug:category_slug>/', 
-         ProductListView.as_view(), name='product_list_by_category'),
-    path('boutique/categorie/<slug:category_slug>/<slug:subcategory_slug>/', 
+    path('boutique/categorie/<slug:slug>/', products_by_category, name='products_by_category'),
+    path('boutique/sous-categorie/<slug:category_slug>/<slug:subcategory_slug>/', 
          ProductListView.as_view(), name='product_list_by_subcategory'),
     path('produit/<slug:slug>/', product_detail_page, name='product_detail'),
     
@@ -37,4 +37,16 @@ urlpatterns = [
     
     # Commentaires
     path('api/reviews/<int:review_id>/comment/', add_comment, name='add_comment'),
+    
+    # Favoris
+    path('products/<int:product_id>/toggle-favorite/', toggle_favorite, name='toggle_favorite'),
+    
+    # Authentification
+    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html', redirect_authenticated_user=True), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='index'), name='logout'),
+    path('register/', register_view, name='register'),
+    
+    # Pages légales
+    path('conditions-utilisation/', terms_view, name='terms'),
+    path('confidentialite/', privacy_view, name='privacy'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

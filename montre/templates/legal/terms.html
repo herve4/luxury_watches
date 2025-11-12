@@ -1,0 +1,30 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Conditions d'utilisation - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h1 class="text-3xl font-bold text-gray-900">Conditions d'utilisation</h1>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">Dernière mise à jour : {{ last_updated|date:"d F Y" }}</p>
+        </div>
+        <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+            <div class="prose max-w-none">
+                <h2>Conditions d'utilisation</h2>
+                <p>Bienvenue sur notre plateforme. En accédant à ce site, vous acceptez d'être lié par ces conditions d'utilisation.</p>
+                
+                <h3>1. Utilisation du site</h3>
+                <p>Ce site est destiné à fournir des informations sur nos produits et services. Vous acceptez d'utiliser ce site uniquement à des fins légales et d'une manière qui ne porte pas atteinte aux droits des autres utilisateurs.</p>
+                
+                <h3>2. Propriété intellectuelle</h3>
+                <p>Tous les contenus présents sur ce site, y compris les textes, images, logos et marques, sont la propriété exclusive de notre entreprise ou de ses concédants de licence.</p>
+                
+                <h3>3. Modifications</h3>
+                <p>Nous nous réservons le droit de modifier ces conditions d'utilisation à tout moment. Les modifications prendront effet dès leur publication sur le site.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

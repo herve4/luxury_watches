@@ -1,0 +1,211 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Connexion - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-container {
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    }
+    .card {
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    .input-group {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9CA3AF;
+        transition: all 0.3s;
+    }
+    /* Style plus spécifique pour le texte des champs */
+    input[type="text"].form-input,
+    input[type="password"].form-input,
+    input[type="email"].form-input,
+    textarea.form-input,
+    select.form-input {
+        transition: all 0.3s;
+        padding-left: 2.5rem;
+        color: #333 !important;
+    }
+    .form-input:focus {
+        border-color: #B8860B;
+        box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.2);
+    }
+    .form-input:focus + .input-icon {
+        color: #B8860B;
+    }
+    
+    /* Assure que le texte du placeholder est également visible */
+    .form-input::placeholder {
+        color: #9CA3AF;
+        opacity: 1; /* Pour Firefox */
+    }
+    .btn-login {
+        background: linear-gradient(135deg, #D4AF37 0%, #F7EF8A 100%);
+        transition: all 0.3s;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .btn-login:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 1.5rem 0;
+        color: #6B7280;
+    }
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #E5E7EB;
+    }
+    .divider:not(:empty)::before {
+        margin-right: 1rem;
+    }
+    .divider:not(:empty)::after {
+        margin-left: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen login-container flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+    <div class="w-full max-w-md space-y-8">
+        <!-- En-tête -->
+        <div class="text-center">
+            <h1 class="text-3xl font-extrabold mb-2" style="color: #B8860B;">
+                Content de vous revoir
+            </h1>
+            <!-- <p class="text-gray-600">
+                Connectez-vous pour accéder à votre compte
+            </p> -->
+        </div>
+
+        <!-- Carte du formulaire -->
+        <div class="bg-white rounded-xl p-8 card">
+            <!-- Boutons de connexion sociale -->
+            <!-- <div class="space-y-4">
+                <a href="#" class="w-full flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 transition-all duration-200">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 2C5.58 2 2 5.58 2 10c0 3.31 2.22 6.09 5.26 7.02.39.07.53-.17.53-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.14.46.55.38A8.013 8.013 0 0018 10c0-4.42-3.58-8-8-8z" clip-rule="evenodd" />
+                    </svg>
+                    Continuer avec GitHub
+                </a>
+                <a href="#" class="w-full flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+                    <svg class="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                        <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
+                    </svg>
+                    Continuer avec Twitter
+                </a>
+            </div> -->
+
+            <!-- Séparateur -->
+            <!-- <div class="divider text-sm">ou continuez avec votre email</div> -->
+
+            <!-- Formulaire de connexion -->
+            <form class="mt-6 space-y-6" method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}" />
+                
+                {% if form.errors %}
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">
+                                Identifiants incorrects
+                            </h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <p>Votre nom d'utilisateur ou votre mot de passe est incorrect. Veuillez réessayer.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Champ Email -->
+                <div class="input-group">
+                    <span class="input-icon">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </span>
+                    <input id="id_username" name="username" type="text" required
+                           class="form-input appearance-none block w-full px-3 py-2.5 pl-10 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gold-500 focus:border-gold-500 sm:text-sm"
+                           placeholder="Nom d'utilisateur">
+                </div>
+
+                <!-- Champ Mot de passe -->
+                <div class="input-group">
+                    <span class="input-icon">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </span>
+                    <input id="id_password" name="password" type="password" required
+                           class="form-input appearance-none block w-full px-3 py-2.5 pl-10 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gold-500 focus:border-gold-500 sm:text-sm"
+                           placeholder="Mot de passe">
+                </div>
+
+                <!-- Options -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember-me" name="remember-me" type="checkbox"
+                               class="h-4 w-4 text-gold-600 focus:ring-gold-500 border-gray-300 rounded">
+                        <label for="remember-me" class="ml-2 block text-sm text-gray-700">
+                            Se souvenir de moi
+                        </label>
+                    </div>
+
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-gold-600 hover:text-gold-500 transition-colors duration-200">
+                            Mot de passe oublié ?
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Bouton de connexion -->
+                <div class="pt-2">
+                    <button type="submit"
+                            class="w-full flex justify-center py-2.5 px-4 rounded-lg shadow-sm text-sm font-medium text-gray-900 bg-gold-500 hover:bg-gold-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold-500 btn-login" style="background-color: #B8860B; color: #151515;">
+                        Se connecter
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Lien vers l'inscription -->
+        <div class="text-center text-sm">
+            <p class="text-gray-600">
+                Vous n'avez pas de compte ?
+                <a href="{% url 'register' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}"
+                   class="font-medium text-gold-600 hover:text-gold-500 transition-colors duration-200 ml-1">
+                    S'inscrire maintenant
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

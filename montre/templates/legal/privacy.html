@@ -1,0 +1,39 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Politique de confidentialité - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h1 class="text-3xl font-bold text-gray-900">Politique de confidentialité</h1>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">Dernière mise à jour : {{ last_updated|date:"d F Y" }}</p>
+        </div>
+        <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+            <div class="prose max-w-none">
+                <h2>Politique de confidentialité</h2>
+                <p>Nous nous engageons à protéger votre vie privée. Cette politique explique comment nous collectons, utilisons et protégeons vos informations personnelles.</p>
+                
+                <h3>1. Collecte des informations</h3>
+                <p>Nous pouvons collecter des informations vous concernant lorsque vous utilisez notre site, notamment lorsque vous remplissez un formulaire ou passez une commande.</p>
+                
+                <h3>2. Utilisation des informations</h3>
+                <p>Les informations que nous recueillons peuvent être utilisées pour :</p>
+                <ul>
+                    <li>Personnaliser votre expérience utilisateur</li>
+                    <li>Améliorer notre site web</li>
+                    <li>Traiter vos commandes</li>
+                    <li>Vous envoyer des e-mails périodiques</li>
+                </ul>
+                
+                <h3>3. Protection des informations</h3>
+                <p>Nous mettons en œuvre une variété de mesures de sécurité pour préserver la sécurité de vos informations personnelles.</p>
+                
+                <h3>4. Cookies</h3>
+                <p>Notre site utilise des cookies pour améliorer l'expérience utilisateur. Vous pouvez configurer votre navigateur pour refuser tous les cookies ou pour vous avertir lorsqu'un cookie est envoyé.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
