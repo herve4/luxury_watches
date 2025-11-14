@@ -42,13 +42,13 @@
         </div>
         
         <!-- Contenu principal amélioré -->
-        <div class="p-4 sm:p-6 lg:p-8">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
+        <div class="p-8">
+            <div class="grid xl:grid-cols-2 gap-12">
                 
                 <!-- Colonne gauche : Visualisation produit premium améliorée -->
-                <div class="space-y-6 sm:space-y-8">
+                <div class="space-y-8">
                     <!-- Zone d'affichage principale avec fonctionnalités avancées -->
-                    <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-4 sm:p-6 md:p-8 flex items-center justify-center min-h-[400px] sm:min-h-[500px] md:min-h-[550px] relative overflow-hidden group border border-slate-600/30 shadow-2xl" id="image-container">
+                    <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-8 flex items-center justify-center min-h-[550px] relative overflow-hidden group border border-slate-600/30 shadow-2xl" id="image-container">
                         
                         <!-- Effet de brillance premium amélioré -->
                         <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-gradient-to-br from-amber-500/5 via-transparent to-amber-500/5" id="hover-effect"></div>
@@ -148,7 +148,7 @@
                     
                     <!-- Galerie miniatures premium améliorée -->
                     {% if product.images.all|length > 1 %}
-                    <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-3 sm:p-4 md:p-6 border border-slate-600/30 shadow-xl">
+                    <div class="bg-slate-800/60 backdrop-blur-sm rounded-2xl p-6 border border-slate-600/30 shadow-xl">
                         <div class="flex items-center justify-between mb-4">
                             <h4 class="text-white font-bold text-lg flex items-center">
                                 <svg class="w-6 h-6 mr-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,7 +227,7 @@
                 </div>
                 
                 <!-- Colonne droite : Sections déroulables -->
-                <div class="space-y-4 sm:space-y-6">
+                <div class="space-y-6">
                     <!-- Section Détails Produit -->
                     <div class="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/30 overflow-hidden">
                         <button 
@@ -267,13 +267,13 @@
                             x-transition:leave-end="opacity-0 -translate-y-4"
                             class="border-t border-slate-700/30"
                         >
-                            <div class="p-4 sm:p-6 space-y-4 sm:space-y-6">
+                            <div class="p-6 space-y-6">
                                 <!-- En-tête produit premium -->
                                 <div class="text-center xl:text-left bg-slate-800/40 rounded-3xl p-8 border border-slate-600/30 backdrop-blur-sm">
-                                    <h1 class="font-playfair text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 leading-tight drop-shadow-lg">{{ product.name }}</h1>
+                                    <h1 class="font-playfair text-5xl font-bold text-white mb-6 leading-tight drop-shadow-lg">{{ product.name }}</h1>
                                     
                                     <!-- Prix bien visible -->
-                                    <div class="flex flex-wrap gap-2 justify-center sm:justify-start mt-3 sm:mt-4">
+                                    <div class="flex items-center justify-center xl:justify-start space-x-6 mb-6">
                                         <div class="text-4xl font-bold text-amber-500 bg-amber-500/10 px-6 py-3 rounded-2xl border border-amber-500/30" id="total-price-display">
                                             {{ product.price|floatformat:0 }} FCFA
                                         </div>
@@ -308,9 +308,9 @@
                                 </div>
 
                                 <!-- Caractéristiques principales -->
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {% if product.movement_type %}
-                                    <div class="flex items-center space-x-3 sm:space-x-4 p-4 sm:p-6 bg-slate-800/50 rounded-2xl border border-slate-600/30 hover:border-amber-500/30 transition-all">
+                                    <div class="flex items-center space-x-4 p-6 bg-slate-800/50 rounded-2xl border border-slate-600/30 hover:border-amber-500/30 transition-all">
                                         <div class="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
                                             <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -324,7 +324,7 @@
                                     {% endif %}
                                     
                                     {% if product.water_resistance %}
-                                    <div class="flex items-center space-x-3 sm:space-x-4 p-4 sm:p-6 bg-slate-800/50 rounded-2xl border border-slate-600/30 hover:border-amber-500/30 transition-all">
+                                    <div class="flex items-center space-x-4 p-6 bg-slate-800/50 rounded-2xl border border-slate-600/30 hover:border-amber-500/30 transition-all">
                                         <div class="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
                                             <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/>
@@ -338,7 +338,7 @@
                                     {% endif %}
                                     
                                     {% if product.case_material %}
-                                    <div class="flex items-center space-x-3 sm:space-x-4 p-4 sm:p-6 bg-slate-800/50 rounded-2xl border border-slate-600/30 hover:border-amber-500/30 transition-all">
+                                    <div class="flex items-center space-x-4 p-6 bg-slate-800/50 rounded-2xl border border-slate-600/30 hover:border-amber-500/30 transition-all">
                                         <div class="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
                                             <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
@@ -352,7 +352,7 @@
                                     {% endif %}
                                     
                                     {% if product.strap_material %}
-                                    <div class="flex items-center space-x-3 sm:space-x-4 p-4 sm:p-6 bg-slate-800/50 rounded-2xl border border-slate-600/30 hover:border-amber-500/30 transition-all">
+                                    <div class="flex items-center space-x-4 p-6 bg-slate-800/50 rounded-2xl border border-slate-600/30 hover:border-amber-500/30 transition-all">
                                         <div class="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
                                             <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
@@ -367,7 +367,7 @@
                                 </div>
 
                                 <!-- Boutons d'action -->
-                                <div class="pt-4 sm:pt-6 space-y-3 sm:space-y-4">
+                                <div class="pt-6 space-y-4">
                                     <button id="order-button"
                                             hx-get="{% url 'order_create' product_slug=product.slug %}"
                                             hx-push-url="true"
@@ -583,7 +583,7 @@
                                             <div class="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50">
                                                 <h3 class="text-2xl font-bold text-white mb-2">Avis clients</h3>
                                                 <div class="flex items-center mb-4">
-                                                    <div class="text-4xl sm:text-5xl font-bold text-amber-400 mr-3 sm:mr-4">{{ product.average_rating|default:0|floatformat:1 }}</div>
+                                                    <div class="text-5xl font-bold text-amber-400 mr-4">{{ product.average_rating|default:0|floatformat:1 }}</div>
                                                     <div>
                                                         <div class="flex items-center mb-1">
                                                             {% for i in '12345' %}
